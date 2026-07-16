@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getEnvDiagnostics, clientEnv, serverEnv } from "@/lib/env";
-import { initAdmin } from "@/lib/firebase/admin";
+import { adminAuth } from "@/lib/firebase/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
 
     let initAdminError: string | null = null;
     try {
-      initAdmin();
+      adminAuth();
     } catch (e) {
       initAdminError = e instanceof Error ? e.message + "\n" + e.stack : String(e);
     }
