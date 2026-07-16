@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { createWorkerSchema, updateWorkerSchema } from "@/lib/domain/schemas";
@@ -53,13 +53,15 @@ export function WorkerFormDialog({ worker, trigger }: Readonly<WorkerFormDialogP
     reset,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(isEdit ? updateWorkerSchema : createWorkerSchema),
+    resolver: zodResolver(isEdit ? updateWorkerSchema : createWorkerSchema) as unknown as Resolver<FormValues, any>,
     defaultValues: isEdit
       ? {
           name: worker.name,
           phone: worker.phone || "",
           role: worker.role,
           active: worker.active,
+          email: "",
+          password: "",
         }
       : {
           name: "",
@@ -67,7 +69,8 @@ export function WorkerFormDialog({ worker, trigger }: Readonly<WorkerFormDialogP
           password: "",
           phone: "",
           role: "worker",
-        } as any,
+          active: true,
+        },
   });
 
   const selectedRole = watch("role");
@@ -163,7 +166,7 @@ export function WorkerFormDialog({ worker, trigger }: Readonly<WorkerFormDialogP
               <Label htmlFor="role">System Role</Label>
               <Select
                 value={selectedRole}
-                onValueChange={(val) => setValue("role", val, { shouldValidate: true })}
+                onValueChange={(val) => setValue("role", val as "admin" | "worker", { shouldValidate: true })}
               >
                 <SelectTrigger id="role">
                   <SelectValue placeholder="Select Role" />
