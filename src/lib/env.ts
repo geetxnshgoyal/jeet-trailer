@@ -55,7 +55,7 @@ export function clientEnv() {
   return cachedClientEnv;
 }
 
-export const useEmulator = () =>
+export const shouldUseEmulator = () =>
   clientEnv().NEXT_PUBLIC_USE_FIREBASE_EMULATOR === "true";
 
 const serverSchema = z.object({
@@ -88,4 +88,26 @@ export function serverEnv() {
   }
   cachedServerEnv = parsed.data;
   return cachedServerEnv;
+}
+
+export function getEnvDiagnostics() {
+  const clientParsed = clientSchema.safeParse(rawClientEnv);
+  const serverParsed = serverSchema.safeParse({
+    FIREBASE_ADMIN_PROJECT_ID: process.env.FIREBASE_ADMIN_PROJECT_ID,
+    FIREBASE_ADMIN_CLIENT_EMAIL: process.env.FIREBASE_ADMIN_CLIENT_EMAIL,
+    FIREBASE_ADMIN_PRIVATE_KEY: process.env.FIREBASE_ADMIN_PRIVATE_KEY,
+    SESSION_COOKIE_NAME: process.env.SESSION_COOKIE_NAME,
+    STORAGE_PROVIDER: process.env.STORAGE_PROVIDER,
+  });
+
+  return {
+    client: {
+      success: clientParsed.success,
+      errors: clientParsed.success ? [] : clientParsed.error.issues,
+    },
+    server: {
+      success: serverParsed.success,
+      errors: serverParsed.success ? [] : serverParsed.error.issues,
+    },
+  };
 }
