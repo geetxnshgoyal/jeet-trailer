@@ -68,6 +68,7 @@ export default async function LoginPage({
           <div className="mt-8">
             <LoginForm next={next} />
           </div>
+        </div>
       </div>
     </div>
   );
