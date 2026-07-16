@@ -18,6 +18,14 @@ export const metadata: Metadata = {
   },
   description:
     "Internal inventory and workshop management system for Jeet Trailers.",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Jeet Trailers",
+  },
+  icons: {
+    apple: "/icon-192.png",
+  },
 };
 
 export const viewport: Viewport = {
