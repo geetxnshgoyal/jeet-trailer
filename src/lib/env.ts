@@ -60,7 +60,7 @@ export const shouldUseEmulator = () =>
 
 const serverSchema = z.object({
   FIREBASE_ADMIN_PROJECT_ID: z.string().min(1),
-  FIREBASE_ADMIN_CLIENT_EMAIL: z.string().email(),
+  FIREBASE_ADMIN_CLIENT_EMAIL: z.string().regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Invalid email address"),
   FIREBASE_ADMIN_PRIVATE_KEY: z.string().min(1),
   SESSION_COOKIE_NAME: z.string().min(1).default("jt_session"),
   STORAGE_PROVIDER: z.enum(["firebase"]).default("firebase"),
