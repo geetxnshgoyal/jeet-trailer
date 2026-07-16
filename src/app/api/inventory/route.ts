@@ -48,6 +48,7 @@ export const POST = handler(async (req: NextRequest) => {
     lowStockThreshold: input.lowStockThreshold,
     serialNumber: input.serialNumber || undefined,
     remarks: input.remarks || undefined,
+    photoBase64: input.photoBase64 || undefined,
     actorId: user.uid,
     actorName: user.name,
   });

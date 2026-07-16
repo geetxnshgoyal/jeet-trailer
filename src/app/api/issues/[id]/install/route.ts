@@ -27,13 +27,7 @@ export const POST = handler(
     const issue = await getIssue(id);
     if (!issue) throw new DomainError("NOT_FOUND", "Issue not found", 404);
 
-    if (user.role !== "admin" && issue.workerId !== user.uid) {
-      throw new DomainError(
-        "FORBIDDEN",
-        "You can only complete installations you issued.",
-        403,
-      );
-    }
+
 
     if (photos.length === 0 && issue.photos.length === 0) {
       throw new DomainError(

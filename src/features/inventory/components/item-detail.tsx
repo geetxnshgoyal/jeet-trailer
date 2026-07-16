@@ -100,19 +100,36 @@ export function ItemDetail({ id }: { id: string }) {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle>Current stock</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-semibold tabular-nums">
-                {item.quantity}
-              </span>
-              <span className="text-muted-foreground">{item.unit}</span>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="space-y-6 lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle>Current stock</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-semibold tabular-nums">
+                  {item.quantity}
+                </span>
+                <span className="text-muted-foreground">{item.unit}</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          {item.photoBase64 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle>Item photo</CardTitle>
+              </CardHeader>
+              <CardContent className="flex justify-center">
+                <img
+                  src={item.photoBase64}
+                  alt={item.name}
+                  className="h-44 w-full rounded-lg object-cover border border-input shadow-sm"
+                />
+              </CardContent>
+            </Card>
+          )}
+        </div>
 
         <Card className="lg:col-span-2">
           <CardHeader>

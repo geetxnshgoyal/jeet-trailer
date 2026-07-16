@@ -63,6 +63,7 @@ export interface CreateItemInput {
   lowStockThreshold?: number;
   serialNumber?: string;
   remarks?: string;
+  photoBase64?: string;
   actorId: string;
   actorName: string;
 }
@@ -115,6 +116,7 @@ export async function createItem(
       ? input.serialNumber?.trim()
       : undefined,
     remarks: input.remarks,
+    photoBase64: input.photoBase64,
     createdAt: now,
     updatedAt: now,
   };
@@ -155,12 +157,16 @@ export interface ListItemsFilter {
 export async function listItems(
   filter: ListItemsFilter = {},
 ): Promise<InventoryItem[]> {
-  let q = itemsCol().orderBy("createdAt", "desc") as FirebaseFirestore.Query;
-  if (filter.categoryId) q = q.where("categoryId", "==", filter.categoryId);
-  if (filter.status) q = q.where("status", "==", filter.status);
-
+  const q = itemsCol().orderBy("createdAt", "desc");
   const snap = await q.get();
   let items = snap.docs.map((d) => d.data() as InventoryItem);
+
+  if (filter.categoryId) {
+    items = items.filter((it) => it.categoryId === filter.categoryId);
+  }
+  if (filter.status) {
+    items = items.filter((it) => it.status === filter.status);
+  }
 
   if (filter.search?.trim()) {
     const needle = filter.search.trim().toLowerCase();
@@ -193,6 +199,7 @@ export interface UpdateItemInput {
   unit?: string;
   lowStockThreshold?: number;
   remarks?: string;
+  photoBase64?: string;
   actorId: string;
   actorName: string;
 }
@@ -218,6 +225,7 @@ export async function updateItem(
     if (patch.spec !== undefined) updates.spec = patch.spec;
     if (patch.unit !== undefined) updates.unit = patch.unit;
     if (patch.remarks !== undefined) updates.remarks = patch.remarks;
+    if (patch.photoBase64 !== undefined) updates.photoBase64 = patch.photoBase64;
     if (patch.lowStockThreshold !== undefined) {
       updates.lowStockThreshold = patch.lowStockThreshold;
       updates.status = deriveStockStatus(

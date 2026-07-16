@@ -17,11 +17,7 @@ export const GET = handler(async (req: NextRequest) => {
   const params = req.nextUrl.searchParams;
 
   const issues = await listIssues({
-    // Workers are scoped to themselves regardless of query params.
-    workerId:
-      user.role === "admin"
-        ? params.get("workerId") ?? undefined
-        : user.uid,
+    workerId: params.get("workerId") ?? undefined,
     status: (params.get("status") as IssueRecord["status"]) ?? undefined,
     vehicleNumber: params.get("vehicleNumber") ?? undefined,
     search: params.get("search") ?? undefined,

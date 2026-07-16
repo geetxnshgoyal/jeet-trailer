@@ -33,14 +33,7 @@ export const POST = handler(
     }
     const issue = snap.data() as IssueRecord;
 
-    // Workers may only attach photos to their own issues; admins to any.
-    if (user.role !== "admin" && issue.workerId !== user.uid) {
-      throw new DomainError(
-        "FORBIDDEN",
-        "You can only add photos to your own issues.",
-        403,
-      );
-    }
+
 
     const form = await req.formData();
     const files = form.getAll("files").filter((f): f is File => f instanceof File);

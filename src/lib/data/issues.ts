@@ -217,16 +217,23 @@ export interface ListIssuesFilter {
 export async function listIssues(
   filter: ListIssuesFilter = {},
 ): Promise<IssueRecord[]> {
-  let q = issuesCol().orderBy("issuedAt", "desc") as FirebaseFirestore.Query;
-  if (filter.workerId) q = q.where("workerId", "==", filter.workerId);
-  if (filter.status) q = q.where("status", "==", filter.status);
-  if (filter.vehicleNumber) {
-    q = q.where("vehicleNumber", "==", filter.vehicleNumber.toUpperCase());
-  }
-  if (filter.limit) q = q.limit(filter.limit);
-
+  const q = issuesCol().orderBy("issuedAt", "desc");
   const snap = await q.get();
   let issues = snap.docs.map((d) => d.data() as IssueRecord);
+
+  if (filter.workerId) {
+    issues = issues.filter((it) => it.workerId === filter.workerId);
+  }
+  if (filter.status) {
+    issues = issues.filter((it) => it.status === filter.status);
+  }
+  if (filter.vehicleNumber) {
+    const vn = filter.vehicleNumber.toUpperCase();
+    issues = issues.filter((it) => it.vehicleNumber === vn);
+  }
+  if (filter.limit) {
+    issues = issues.slice(0, filter.limit);
+  }
 
   if (filter.search?.trim()) {
     const needle = filter.search.trim().toLowerCase();

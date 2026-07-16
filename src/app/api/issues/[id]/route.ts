@@ -16,13 +16,7 @@ export const GET = handler(
       throw new DomainError("NOT_FOUND", "Issue record not found", 404);
     }
 
-    if (user.role !== "admin" && issue.workerId !== user.uid) {
-      throw new DomainError(
-        "FORBIDDEN",
-        "You can only view your own issue records.",
-        403,
-      );
-    }
+
 
     return ok({ issue });
   },

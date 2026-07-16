@@ -60,6 +60,7 @@ export interface InventoryItem {
   /** Present only for serial-tracked items. */
   serialNumber?: string;
   remarks?: string;
+  photoBase64?: string;
   createdAt: string;
   updatedAt: string;
 }

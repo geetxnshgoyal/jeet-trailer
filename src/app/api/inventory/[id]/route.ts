@@ -35,6 +35,7 @@ export const PATCH = handler(
       unit: patch.unit,
       lowStockThreshold: patch.lowStockThreshold,
       remarks: patch.remarks || undefined,
+      photoBase64: patch.photoBase64 || undefined,
       actorId: actor.uid,
       actorName: actor.name,
     });

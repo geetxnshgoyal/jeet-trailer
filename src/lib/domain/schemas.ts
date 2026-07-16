@@ -76,6 +76,7 @@ export const createItemSchema = z.object({
     .default(5),
   serialNumber: z.string().trim().max(120).optional().or(z.literal("")),
   remarks: z.string().trim().max(500).optional().or(z.literal("")),
+  photoBase64: z.string().optional(),
 });
 export type CreateItemInput = z.infer<typeof createItemSchema>;
 
