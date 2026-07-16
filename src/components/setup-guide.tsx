@@ -1,19 +1,20 @@
 "use client";
 
 import { AlertTriangle, CheckCircle, Info } from "lucide-react";
+import type { ZodIssue } from "zod";
 
 interface Diagnostics {
-  client: {
-    success: boolean;
-    errors: any[];
+  readonly client: {
+    readonly success: boolean;
+    readonly errors: readonly ZodIssue[];
   };
-  server: {
-    success: boolean;
-    errors: any[];
+  readonly server: {
+    readonly success: boolean;
+    readonly errors: readonly ZodIssue[];
   };
 }
 
-export function SetupGuide({ diagnostics }: { diagnostics: Diagnostics }) {
+export function SetupGuide({ diagnostics }: Readonly<{ diagnostics: Diagnostics }>) {
   const clientKeys = [
     { key: "NEXT_PUBLIC_FIREBASE_API_KEY", desc: "Firebase Web API Key" },
     { key: "NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN", desc: "Firebase Auth Domain" },

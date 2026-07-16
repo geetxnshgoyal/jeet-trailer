@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createWorkerSchema, updateWorkerSchema, type CreateWorkerInput } from "@/lib/domain/schemas";
+import type { z } from "zod";
+import { createWorkerSchema, updateWorkerSchema } from "@/lib/domain/schemas";
 import { useCreateWorker, useUpdateWorker } from "../hooks";
 import { toast } from "sonner";
 import {
@@ -29,12 +30,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2 } from "lucide-react";
 import type { AppUser } from "@/lib/domain/types";
 
+type CreateInput = z.infer<typeof createWorkerSchema>;
+type FormValues = CreateInput & { active?: boolean };
+
 interface WorkerFormDialogProps {
-  worker?: AppUser;
-  trigger: React.ReactNode;
+  readonly worker?: AppUser;
+  readonly trigger: React.ReactNode;
 }
 
-export function WorkerFormDialog({ worker, trigger }: WorkerFormDialogProps) {
+export function WorkerFormDialog({ worker, trigger }: Readonly<WorkerFormDialogProps>) {
   const [open, setOpen] = useState(false);
   const isEdit = !!worker;
 
@@ -48,7 +52,7 @@ export function WorkerFormDialog({ worker, trigger }: WorkerFormDialogProps) {
     watch,
     reset,
     formState: { errors },
-  } = useForm<any>({
+  } = useForm<FormValues>({
     resolver: zodResolver(isEdit ? updateWorkerSchema : createWorkerSchema),
     defaultValues: isEdit
       ? {
@@ -63,13 +67,13 @@ export function WorkerFormDialog({ worker, trigger }: WorkerFormDialogProps) {
           password: "",
           phone: "",
           role: "worker",
-        },
+        } as any,
   });
 
   const selectedRole = watch("role");
   const isActive = watch("active");
 
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: FormValues) => {
     if (isEdit) {
       updateMutation.mutate(data, {
         onSuccess: () => {

@@ -5,7 +5,7 @@ import { X, Download, Maximize2 } from "lucide-react";
 import type { InstallationPhoto } from "@/lib/domain/types";
 import { Button } from "@/components/ui/button";
 
-export function PhotoGallery({ photos }: { photos: InstallationPhoto[] }) {
+export function PhotoGallery({ photos }: Readonly<{ photos: readonly InstallationPhoto[] }>) {
   const [activePhoto, setActivePhoto] = useState<InstallationPhoto | null>(null);
 
   if (photos.length === 0) {

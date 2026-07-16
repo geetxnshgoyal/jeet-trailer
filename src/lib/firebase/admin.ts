@@ -9,7 +9,7 @@ import {
 import { getAuth, type Auth } from "firebase-admin/auth";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
 import { getStorage, type Storage } from "firebase-admin/storage";
-import { serverEnv, useEmulator } from "@/lib/env";
+import { serverEnv, shouldUseEmulator } from "@/lib/env";
 
 /**
  * Firebase Admin SDK singleton for server-side use only (API routes, server
@@ -41,7 +41,7 @@ function initAdmin(): App {
 
   const env = serverEnv();
 
-  if (useEmulator()) {
+  if (shouldUseEmulator()) {
     // Point the Admin SDK at local emulators. These env vars are read by the
     // SDK internally; set them here so a single flag drives everything.
     process.env.FIRESTORE_EMULATOR_HOST ||= "127.0.0.1:8080";

@@ -18,7 +18,7 @@ import { formatDateTime } from "@/lib/utils";
  * and the full immutable history timeline. Workers see a read-only view; admins
  * get the adjust-stock and edit affordances.
  */
-export function ItemDetail({ id }: { id: string }) {
+export function ItemDetail({ id }: Readonly<{ id: string }>) {
   const { isAdmin } = useAuth();
   const { data: item, isLoading } = useItem(id);
 

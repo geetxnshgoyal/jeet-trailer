@@ -10,7 +10,7 @@ import {
   connectStorageEmulator,
   type FirebaseStorage,
 } from "firebase/storage";
-import { clientEnv, useEmulator } from "@/lib/env";
+import { clientEnv, shouldUseEmulator } from "@/lib/env";
 
 /**
  * Browser Firebase SDK singleton. Safe to import in client components.
@@ -43,7 +43,7 @@ function connectEmulatorsOnce(
   db: Firestore,
   storage: FirebaseStorage,
 ) {
-  if (emulatorsConnected || !useEmulator()) return;
+  if (emulatorsConnected || !shouldUseEmulator()) return;
   emulatorsConnected = true;
   connectAuthEmulator(auth, "http://127.0.0.1:9099", {
     disableWarnings: true,

@@ -9,7 +9,7 @@ import { getIssue } from "@/lib/data/issues";
  */
 export const GET = handler(
   async (req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
-    const user = await requireUser();
+    await requireUser();
     const { id } = await ctx.params;
     const issue = await getIssue(id);
     if (!issue) {

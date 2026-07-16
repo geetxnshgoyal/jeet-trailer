@@ -23,7 +23,7 @@ const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/heic"])
 
 export const POST = handler(
   async (req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
-    const user = await requireUser();
+    await requireUser();
     const { id } = await ctx.params;
 
     // Confirm the issue exists before spending time on uploads.

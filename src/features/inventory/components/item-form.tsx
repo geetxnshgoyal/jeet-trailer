@@ -39,10 +39,10 @@ import type { InventoryItem } from "@/lib/domain/types";
 export function ItemForm({
   item,
   onDone,
-}: {
+}: Readonly<{
   item?: InventoryItem;
   onDone: () => void;
-}) {
+}>) {
   const isEdit = !!item;
   const { data: categories } = useCategories();
   const createItem = useCreateItem();
