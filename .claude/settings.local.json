@@ -1,7 +1,37 @@
 {
   "permissions": {
     "allow": [
-      "Bash(brew list)"
+      "Bash(brew list)",
+      "Bash(npm install *)",
+      "Bash(node -e \"const p=require\\('./package.json'\\); console.log\\(JSON.stringify\\({...p.dependencies,...p.devDependencies},null,2\\)\\)\")",
+      "Bash(node *)",
+      "Bash(node -e \"console.log\\(require\\('./node_modules/lucide-react/package.json'\\).version\\)\")",
+      "Bash(node -e \"const l=require\\('lucide-react'\\); console.log\\('LayoutDashboard' in l, 'Package' in l, 'Wrench' in l, typeof l.Menu\\)\")",
+      "Bash(npx tsc *)",
+      "Bash(PORT=3200 npm run dev)",
+      "Bash(echo \"started pid $!\")",
+      "Bash(curl -sS -o /dev/null -w \"root: HTTP %{http_code}\\\\n\" http://localhost:3200/)",
+      "Bash(kill 15834)",
+      "Bash(pkill -f \"next dev\")",
+      "Bash(nohup npm run dev)",
+      "Bash(PORT=3000 npm run dev)",
+      "Bash(curl -s -o /dev/null -w \"login: HTTP %{http_code}\\\\n\" http://localhost:3000/login)",
+      "Bash(curl -s -o /dev/null -w \"login: HTTP %{http_code}\\\\n\" http://localhost:3200/login)",
+      "Bash(lsof -nP -iTCP -sTCP:LISTEN)",
+      "Bash(curl -s http://localhost:3000/login)",
+      "Bash(grep -oE '\\(Missing/invalid|Error:|serverEnv|error\\)[^<]{0,120}')",
+      "Bash(grep -rnE '```|This is a placeholder|This file has|has issues|the bug|the fix is|someone/something' src/)",
+      "Bash(grep -rl '```' src/)",
+      "Bash(echo \"---exit $?---\")",
+      "Bash(curl -s -o /dev/null -w \"dashboard \\(no cookie\\): HTTP %{http_code}\\\\n\" -L --max-redirs 0 http://localhost:3000/dashboard)",
+      "Bash(grep -rlE '```|This is a placeholder|has issues|is the bug' src/)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(node -e \"require.resolve\\('@tanstack/react-table'\\); console.log\\('react-table ok'\\)\")",
+      "Bash(npm run *)",
+      "Bash([ -f \"$FILE\" ])",
+      "Bash(node -e 'const j=require\\('\\\\''/Users/geetanshgoyal/Downloads/jeet-trailers-firebase-adminsdk-fbsvc-496a78c2f8.json'\\\\''\\); console.log\\('\\\\''fields:'\\\\'', Object.keys\\(j\\).join\\('\\\\'', '\\\\''\\)\\); console.log\\('\\\\''project_id:'\\\\'', j.project_id\\); console.log\\('\\\\''client_email:'\\\\'', j.client_email\\); console.log\\('\\\\''private_key present:'\\\\'', !!j.private_key, '\\\\''len'\\\\'', \\(j.private_key||'\\\\'''\\\\''\\).length\\);')",
+      "Bash(grep -rln '```' src/)",
+      "Bash(grep -c '```' src/lib/data/issues.ts)"
     ]
   }
 }
