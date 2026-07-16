@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getEnvDiagnostics, clientEnv, serverEnv } from "@/lib/env";
-import { adminAuth } from "@/lib/firebase/admin";
 
 export const dynamic = "force-dynamic";
 
@@ -30,44 +28,65 @@ export async function GET(req: NextRequest) {
       };
     }
 
-    let envDiagnosticsError: string | null = null;
+    let envModuleError: string | null = null;
+    let envDiag: any = null;
     try {
-      getEnvDiagnostics();
+      envDiag = await import("@/lib/env");
     } catch (e) {
-      envDiagnosticsError = e instanceof Error ? e.message + "\n" + e.stack : String(e);
+      envModuleError = e instanceof Error ? e.message + "\n" + e.stack : String(e);
     }
 
-    let clientEnvError: string | null = null;
+    let adminModuleError: string | null = null;
+    let adminDiag: any = null;
     try {
-      clientEnv();
+      adminDiag = await import("@/lib/firebase/admin");
     } catch (e) {
-      clientEnvError = e instanceof Error ? e.message + "\n" + e.stack : String(e);
+      adminModuleError = e instanceof Error ? e.message + "\n" + e.stack : String(e);
     }
 
-    let serverEnvError: string | null = null;
-    try {
-      serverEnv();
-    } catch (e) {
-      serverEnvError = e instanceof Error ? e.message + "\n" + e.stack : String(e);
+    const runDiagnostics: Record<string, string> = {};
+
+    if (envDiag) {
+      try {
+        envDiag.getEnvDiagnostics();
+        runDiagnostics.getEnvDiagnostics = "ok";
+      } catch (e) {
+        runDiagnostics.getEnvDiagnostics = e instanceof Error ? e.message + "\n" + e.stack : String(e);
+      }
+
+      try {
+        envDiag.clientEnv();
+        runDiagnostics.clientEnv = "ok";
+      } catch (e) {
+        runDiagnostics.clientEnv = e instanceof Error ? e.message + "\n" + e.stack : String(e);
+      }
+
+      try {
+        envDiag.serverEnv();
+        runDiagnostics.serverEnv = "ok";
+      } catch (e) {
+        runDiagnostics.serverEnv = e instanceof Error ? e.message + "\n" + e.stack : String(e);
+      }
     }
 
-    let initAdminError: string | null = null;
-    try {
-      adminAuth();
-    } catch (e) {
-      initAdminError = e instanceof Error ? e.message + "\n" + e.stack : String(e);
+    if (adminDiag) {
+      try {
+        adminDiag.adminAuth();
+        runDiagnostics.adminAuth = "ok";
+      } catch (e) {
+        runDiagnostics.adminAuth = e instanceof Error ? e.message + "\n" + e.stack : String(e);
+      }
     }
 
     return NextResponse.json({
       status: "ok",
       report,
       vercelEnv: process.env.VERCEL_ENV || "unknown",
-      diagnostics: {
-        envDiagnosticsError,
-        clientEnvError,
-        serverEnvError,
-        initAdminError,
-      }
+      errors: {
+        envModuleError,
+        adminModuleError,
+      },
+      runDiagnostics,
     });
   } catch (err) {
     return NextResponse.json({
