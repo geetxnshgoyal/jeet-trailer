@@ -9,6 +9,15 @@ import { toast } from "sonner";
 import { navItemsForRole } from "./nav-config";
 import type { Role } from "@/lib/domain/types";
 
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{
+    outcome: "accepted" | "dismissed";
+    platform: string;
+  }>;
+  prompt(): Promise<void>;
+}
+
 /**
  * Dark steel sidebar with role-filtered navigation. Rendered both in the
  * fixed desktop rail and inside the mobile drawer, so it takes its items via
@@ -17,49 +26,54 @@ import type { Role } from "@/lib/domain/types";
 export function SidebarNav({
   role,
   onNavigate,
-}: {
+}: Readonly<{
   role: Role;
   onNavigate?: () => void;
-}) {
+}>) {
   const pathname = usePathname();
   const items = navItemsForRole(role);
 
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallBtn, setShowInstallBtn] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Detect if already installed/standalone
-    const isStandalone = window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone;
-    if (isStandalone) return;
-
-    // Detect iOS
-    const userAgent = window.navigator.userAgent;
-    const ios = /iPad|iPhone|iPod/.test(userAgent) && !(window as any).MSStream;
-    setIsIOS(ios);
-
-    if (ios) {
-      setShowInstallBtn(true);
-    }
-
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e);
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
       setShowInstallBtn(true);
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
+    const timer = setTimeout(() => {
+      // Detect if already installed/standalone
+      const nav = navigator as Navigator & { standalone?: boolean };
+      const isStandalone = window.matchMedia("(display-mode: standalone)").matches || !!nav.standalone;
+      if (isStandalone) return;
+
+      // Detect iOS
+      const userAgent = window.navigator.userAgent;
+      const win = window as Window & { MSStream?: unknown };
+      const ios = /iPad|iPhone|iPod/.test(userAgent) && !win.MSStream;
+      setIsIOS(ios);
+
+      if (ios) {
+        setShowInstallBtn(true);
+      }
+    }, 0);
+
     return () => {
+      clearTimeout(timer);
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     };
   }, []);
 
   const handleAndroidInstall = async () => {
     if (!deferredPrompt) return;
-    deferredPrompt.prompt();
+    await deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
     if (outcome === "accepted") {
       setDeferredPrompt(null);

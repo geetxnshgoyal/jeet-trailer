@@ -70,7 +70,7 @@ let cachedServerEnv: z.infer<typeof serverSchema> | null = null;
 
 export function serverEnv() {
   if (typeof window !== "undefined") {
-    throw new Error("serverEnv() must not be called in the browser.");
+    throw new TypeError("serverEnv() must not be called in the browser.");
   }
   if (cachedServerEnv) return cachedServerEnv;
   const parsed = serverSchema.safeParse({
