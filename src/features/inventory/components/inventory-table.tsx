@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 import type { ColumnDef } from "@tanstack/react-table";
-import { Plus, Search, Package } from "lucide-react";
+import { Plus, Search, Package, LayoutGrid, List } from "lucide-react";
 import { useInventory, useCategories } from "../hooks";
 import { StockStatusBadge } from "./stock-status-badge";
 import { ItemFormDialog } from "./item-form-dialog";
@@ -12,6 +12,7 @@ import { DataTable } from "@/components/common/data-table";
 import { EmptyState } from "@/components/common/empty-state";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -34,6 +35,7 @@ export function InventoryTable({ canManage }: { canManage: boolean }) {
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState<string>(ALL);
   const [status, setStatus] = useState<string>(ALL);
+  const [viewMode, setViewMode] = useState<"table" | "grid">("table");
   const debouncedSearch = useDebouncedValue(search, 300);
 
   const { data: categories } = useCategories();
@@ -140,6 +142,30 @@ export function InventoryTable({ canManage }: { canManage: boolean }) {
             <SelectItem value="out_of_stock">Out of stock</SelectItem>
           </SelectContent>
         </Select>
+
+        <div className="flex items-center gap-1 border border-input p-0.5 rounded-lg bg-muted/40">
+          <Button
+            variant={viewMode === "table" ? "secondary" : "ghost"}
+            size="icon"
+            onClick={() => setViewMode("table")}
+            className="h-9 w-9 p-0"
+            title="Table View"
+            type="button"
+          >
+            <List className="size-4" />
+          </Button>
+          <Button
+            variant={viewMode === "grid" ? "secondary" : "ghost"}
+            size="icon"
+            onClick={() => setViewMode("grid")}
+            className="h-9 w-9 p-0"
+            title="Grid View"
+            type="button"
+          >
+            <LayoutGrid className="size-4" />
+          </Button>
+        </div>
+
         {canManage && (
           <ItemFormDialog
             trigger={
@@ -162,6 +188,77 @@ export function InventoryTable({ canManage }: { canManage: boolean }) {
               : "Get started by adding your first inventory item."
           }
         />
+      ) : viewMode === "grid" ? (
+        isLoading ? (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, idx) => (
+              <div key={idx} className="space-y-3 rounded-xl border border-border p-4 bg-card">
+                <Skeleton className="aspect-video w-full rounded-lg" />
+                <Skeleton className="h-4 w-1/4" />
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {items?.map((item) => (
+              <Link
+                key={item.id}
+                href={`/inventory/${item.id}`}
+                className="group flex flex-col overflow-hidden rounded-xl border border-border bg-card text-card-foreground shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md"
+              >
+                <div className="relative aspect-video w-full overflow-hidden bg-muted flex items-center justify-center border-b border-border">
+                  {item.photoBase64 ? (
+                    <img
+                      src={item.photoBase64}
+                      alt={item.name}
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  ) : (
+                    <Package className="size-10 text-muted-foreground/45 transition-transform duration-300 group-hover:scale-110" />
+                  )}
+                  <div className="absolute right-2 top-2">
+                    <StockStatusBadge status={item.status} />
+                  </div>
+                </div>
+                <div className="p-4 flex-1 flex flex-col justify-between space-y-2">
+                  <div>
+                    <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-wider">{item.code}</p>
+                    <div className="min-w-0 mt-0.5">
+                      <h3 className="truncate font-semibold text-sm group-hover:text-primary transition-colors">
+                        {item.name}
+                      </h3>
+                      <p className="truncate text-xs text-muted-foreground mt-0.5">
+                        {item.brand}
+                        {item.spec ? ` · ${item.spec}` : ""}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="space-y-2 pt-2">
+                    <div className="flex items-baseline justify-between text-xs border-t border-border/60 pt-2">
+                      <span className="text-muted-foreground">Quantity</span>
+                      <span className="font-semibold tabular-nums text-sm">
+                        {item.quantity}{" "}
+                        <span className="text-xs font-normal text-muted-foreground">
+                          {item.unit}
+                        </span>
+                      </span>
+                    </div>
+                    {item.serialNumber && (
+                      <div className="flex items-center justify-between text-[11px] bg-muted/50 px-2 py-1 rounded">
+                        <span className="text-muted-foreground">Serial</span>
+                        <span className="font-mono text-foreground font-medium">
+                          {item.serialNumber}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )
       ) : (
         <DataTable
           columns={columns}
