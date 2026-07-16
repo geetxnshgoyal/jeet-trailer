@@ -29,18 +29,29 @@ export const viewport: Viewport = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const diag = getEnvDiagnostics();
-  const hasEnvError = !diag.client.success || !diag.server.success;
+  try {
+    const diag = getEnvDiagnostics();
+    const hasEnvError = !diag.client.success || !diag.server.success;
 
-  return (
-    <html lang="en" className={`${inter.variable} h-full`}>
-      <body className="min-h-full antialiased">
-        {hasEnvError ? (
-          <SetupGuide diagnostics={diag} />
-        ) : (
-          <Providers>{children}</Providers>
-        )}
-      </body>
-    </html>
-  );
+    return (
+      <html lang="en" className={`${inter.variable} h-full`}>
+        <body className="min-h-full antialiased">
+          {hasEnvError ? (
+            <SetupGuide diagnostics={diag} />
+          ) : (
+            <Providers>{children}</Providers>
+          )}
+        </body>
+      </html>
+    );
+  } catch (err) {
+    return (
+      <html lang="en" className="h-full">
+        <body className="min-h-full p-8 font-mono text-red-500 bg-red-50">
+          <h1 className="text-xl font-bold mb-4">Fatal Error in RootLayout:</h1>
+          <pre className="whitespace-pre-wrap">{err instanceof Error ? err.stack : String(err)}</pre>
+        </body>
+      </html>
+    );
+  }
 }

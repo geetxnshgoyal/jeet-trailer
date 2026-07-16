@@ -12,13 +12,14 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
-  const user = await getCurrentUser();
-  if (user) redirect("/dashboard");
+  try {
+    const user = await getCurrentUser();
+    if (user) redirect("/dashboard");
 
-  const { next } = await searchParams;
+    const { next } = await searchParams;
 
-  return (
-    <div className="grid min-h-dvh lg:grid-cols-2">
+    return (
+      <div className="grid min-h-dvh lg:grid-cols-2">
       {/* Brand panel — hidden on small screens. */}
       <div className="relative hidden flex-col justify-between bg-sidebar p-12 text-sidebar-foreground lg:flex">
         <div className="flex items-center gap-3">
@@ -67,8 +68,15 @@ export default async function LoginPage({
           <div className="mt-8">
             <LoginForm next={next} />
           </div>
-        </div>
       </div>
     </div>
   );
+  } catch (err) {
+    return (
+      <div className="p-8 font-mono text-red-500 bg-red-50 min-h-screen">
+        <h1 className="text-xl font-bold mb-4">Error in LoginPage:</h1>
+        <pre className="whitespace-pre-wrap">{err instanceof Error ? err.stack : String(err)}</pre>
+      </div>
+    );
+  }
 }
