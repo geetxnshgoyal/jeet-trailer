@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getEnvDiagnostics, clientEnv, serverEnv } from "@/lib/env";
+import { initAdmin } from "@/lib/firebase/admin";
 
 export async function GET(req: NextRequest) {
   try {
@@ -26,10 +28,44 @@ export async function GET(req: NextRequest) {
       };
     }
 
+    let envDiagnosticsError: string | null = null;
+    try {
+      getEnvDiagnostics();
+    } catch (e) {
+      envDiagnosticsError = e instanceof Error ? e.message + "\n" + e.stack : String(e);
+    }
+
+    let clientEnvError: string | null = null;
+    try {
+      clientEnv();
+    } catch (e) {
+      clientEnvError = e instanceof Error ? e.message + "\n" + e.stack : String(e);
+    }
+
+    let serverEnvError: string | null = null;
+    try {
+      serverEnv();
+    } catch (e) {
+      serverEnvError = e instanceof Error ? e.message + "\n" + e.stack : String(e);
+    }
+
+    let initAdminError: string | null = null;
+    try {
+      initAdmin();
+    } catch (e) {
+      initAdminError = e instanceof Error ? e.message + "\n" + e.stack : String(e);
+    }
+
     return NextResponse.json({
       status: "ok",
       report,
       vercelEnv: process.env.VERCEL_ENV || "unknown",
+      diagnostics: {
+        envDiagnosticsError,
+        clientEnvError,
+        serverEnvError,
+        initAdminError,
+      }
     });
   } catch (err) {
     return NextResponse.json({
