@@ -13,6 +13,7 @@ import type {
   IssueRecord,
   ItemHistoryEvent,
   InstallationPhoto,
+  InstallationStatus,
 } from "@/lib/domain/types";
 
 /**
@@ -41,9 +42,11 @@ function itemRef(itemId: string) {
 export interface CreateIssueInput {
   itemId: string;
   quantity: number;
-  vehicleNumber: string;
+  vehicleNumber?: string;
   serialNumber?: string;
   notes?: string;
+  status?: InstallationStatus;
+  photos?: InstallationPhoto[];
   workerId: string;
   workerName: string;
 }
@@ -81,10 +84,15 @@ export async function createIssue(
 
     // ---- derive next values ----
     const nextQty = item.quantity - input.quantity;
-    const status = deriveStockStatus(nextQty, item.lowStockThreshold);
+    const stockStatus = deriveStockStatus(nextQty, item.lowStockThreshold);
     const seq = ((counterSnap.exists ? counterSnap.data()?.value : 0) ?? 0) + 1;
     const code = `ISS-${String(seq).padStart(6, "0")}`;
     const now = nowIso();
+
+    const hasPhotos = input.photos && input.photos.length > 0;
+    const issueStatus: InstallationStatus =
+      input.status || (hasPhotos ? "installed" : "issued");
+    const vehicleNo = input.vehicleNumber?.trim() || "";
 
     const record: IssueRecord = {
       id: issueRef.id,
@@ -97,10 +105,11 @@ export async function createIssue(
       quantity: input.quantity,
       workerId: input.workerId,
       workerName: input.workerName,
-      vehicleNumber: input.vehicleNumber,
-      status: "issued",
+      vehicleNumber: vehicleNo,
+      status: issueStatus,
       issuedAt: now,
-      photos: [],
+      installedAt: issueStatus === "installed" ? now : undefined,
+      photos: input.photos || [],
       createdAt: now,
       updatedAt: now,
       ...(serialNumber ? { serialNumber } : {}),
@@ -109,19 +118,21 @@ export async function createIssue(
 
     const historyEvent: ItemHistoryEvent = {
       id: histRef.id,
-      type: "issued",
+      type: issueStatus === "installed" ? "installed" : "issued",
       quantityDelta: -input.quantity,
       resultingQuantity: nextQty,
       issueId: issueRef.id,
-      vehicleNumber: input.vehicleNumber,
+      vehicleNumber: vehicleNo,
       actorId: input.workerId,
       actorName: input.workerName,
       createdAt: now,
-      note: `Issued ${input.quantity} ${item.unit} for vehicle ${input.vehicleNumber}`,
+      note: vehicleNo
+        ? `Issued ${input.quantity} ${item.unit} for vehicle ${vehicleNo}`
+        : `Issued ${input.quantity} ${item.unit}`,
     };
 
     // ---- writes ----
-    tx.update(iRef, { quantity: nextQty, status, updatedAt: now });
+    tx.update(iRef, { quantity: nextQty, status: stockStatus, updatedAt: now });
     tx.set(counterRef, { value: seq }, { merge: true });
     tx.set(issueRef, record);
     tx.set(histRef, historyEvent);

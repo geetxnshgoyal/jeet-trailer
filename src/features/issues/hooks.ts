@@ -51,9 +51,12 @@ export function useCreateIssue() {
   return useMutation({
     mutationFn: (body: {
       itemId: string;
+      workerId?: string;
       quantity: number;
-      vehicleNumber: string;
+      vehicleNumber?: string;
       serialNumber?: string;
+      status?: "issued" | "installed" | "cancelled";
+      photos?: { path: string; url: string; uploadedAt: string }[];
       notes?: string;
     }) => api.post<{ issue: IssueRecord }>("/api/issues", body),
     onSuccess: () => {

@@ -3,17 +3,15 @@ import { requireUser } from "@/lib/auth/session";
 import { ok, handler } from "@/lib/api/response";
 import { createIssueSchema } from "@/lib/domain/schemas";
 import { createIssue, listIssues } from "@/lib/data/issues";
-import type { IssueRecord } from "@/lib/domain/types";
+import { adminDb } from "@/lib/firebase/admin";
+import { COLLECTIONS } from "@/lib/domain/constants";
+import type { IssueRecord, AppUser } from "@/lib/domain/types";
 
 /**
  * GET /api/issues — list issue records (any authenticated user).
- *
- * Workers see only their own issues (workerId is forced to the caller);
- * admins may pass ?workerId / ?status / ?vehicleNumber / ?search to filter
- * across everyone.
  */
 export const GET = handler(async (req: NextRequest) => {
-  const user = await requireUser();
+  await requireUser();
   const params = req.nextUrl.searchParams;
 
   const issues = await listIssues({
@@ -30,22 +28,38 @@ export const GET = handler(async (req: NextRequest) => {
 /**
  * POST /api/issues — issue an item (any authenticated user).
  *
- * The worker is taken from the session, never the body, so a worker can only
- * issue as themselves. Stock decrement + issue record + history are written in
- * a single transaction inside createIssue().
+ * Worker Defaults to session user if not explicitly specified.
+ * Stock decrement + issue record + history are written in a single transaction.
  */
 export const POST = handler(async (req: NextRequest) => {
   const user = await requireUser();
   const input = createIssueSchema.parse(await req.json());
 
+  let targetWorkerId = user.uid;
+  let targetWorkerName = user.name;
+
+  if (input.workerId && input.workerId !== user.uid) {
+    const workerSnap = await adminDb()
+      .collection(COLLECTIONS.users)
+      .doc(input.workerId)
+      .get();
+    if (workerSnap.exists) {
+      const workerData = workerSnap.data() as AppUser;
+      targetWorkerId = workerData.id || input.workerId;
+      targetWorkerName = workerData.name;
+    }
+  }
+
   const issue = await createIssue({
     itemId: input.itemId,
     quantity: input.quantity,
-    vehicleNumber: input.vehicleNumber,
+    vehicleNumber: input.vehicleNumber || "",
     serialNumber: input.serialNumber || undefined,
     notes: input.notes || undefined,
-    workerId: user.uid,
-    workerName: user.name,
+    status: input.status,
+    photos: input.photos,
+    workerId: targetWorkerId,
+    workerName: targetWorkerName,
   });
 
   return ok({ issue }, 201);

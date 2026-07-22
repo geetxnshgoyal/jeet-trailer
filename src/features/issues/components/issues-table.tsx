@@ -70,17 +70,20 @@ export function IssuesTable() {
       },
       {
         accessorKey: "workerName",
-        header: "Issued By",
-        cell: ({ row }) => <span className="text-sm">{row.original.workerName}</span>,
+        header: "Issued To",
+        cell: ({ row }) => <span className="text-sm font-medium">{row.original.workerName}</span>,
       },
       {
         accessorKey: "vehicleNumber",
         header: "Vehicle No.",
-        cell: ({ row }) => (
-          <span className="font-semibold text-foreground tracking-wide font-mono bg-muted/60 px-2 py-0.5 rounded text-xs border border-border">
-            {row.original.vehicleNumber}
-          </span>
-        ),
+        cell: ({ row }) =>
+          row.original.vehicleNumber ? (
+            <span className="font-semibold text-foreground tracking-wide font-mono bg-muted/60 px-2 py-0.5 rounded text-xs border border-border">
+              {row.original.vehicleNumber}
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground">—</span>
+          ),
       },
       {
         accessorKey: "quantity",

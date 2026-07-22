@@ -97,9 +97,20 @@ export type StockAdjustInput = z.infer<typeof stockAdjustSchema>;
 
 export const createIssueSchema = z.object({
   itemId: trimmed(1, 64, "Item"),
+  workerId: z.string().trim().optional(),
   quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
-  vehicleNumber: vehicleNumberSchema,
+  vehicleNumber: vehicleNumberSchema.optional().or(z.literal("")),
   serialNumber: z.string().trim().max(120).optional().or(z.literal("")),
+  status: z.enum(["issued", "installed", "cancelled"]).optional(),
+  photos: z
+    .array(
+      z.object({
+        path: z.string(),
+        url: z.string(),
+        uploadedAt: z.string(),
+      }),
+    )
+    .optional(),
   notes: z.string().trim().max(500).optional().or(z.literal("")),
 });
 export type CreateIssueInput = z.infer<typeof createIssueSchema>;

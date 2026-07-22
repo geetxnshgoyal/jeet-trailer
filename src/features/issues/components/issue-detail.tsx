@@ -128,7 +128,7 @@ export function IssueDetail({ id }: { id: string }) {
               </div>
               <div>
                 <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Vehicle Number</p>
-                <p className="font-semibold tracking-wide font-mono text-foreground">{issue.vehicleNumber}</p>
+                <p className="font-semibold tracking-wide font-mono text-foreground">{issue.vehicleNumber || "N/A"}</p>
               </div>
             </div>
 
@@ -137,7 +137,7 @@ export function IssueDetail({ id }: { id: string }) {
                 <User className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Issued By</p>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Issued To</p>
                 <p className="font-medium">{issue.workerName}</p>
               </div>
             </div>
