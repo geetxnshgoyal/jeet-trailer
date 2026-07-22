@@ -50,6 +50,9 @@ export interface InventoryItem {
   name: string;
   brand: string;
   model?: string;
+  supplierName?: string;
+  invoiceNumber?: string;
+  purchaseDate?: string;
   /** Size / specification, e.g. "295/80 R22.5". */
   spec?: string;
   quantity: number;

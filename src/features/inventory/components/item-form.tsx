@@ -7,12 +7,6 @@ import { Loader2, Camera, X } from "lucide-react";
 import { toast } from "sonner";
 import type { z } from "zod";
 import { createItemSchema, type CreateItemInput } from "@/lib/domain/schemas";
-
-// Zod coercion makes the *input* type of numeric fields `unknown` (a string
-// from the <input>) while the *output* type is `number`. Type the form on both
-// so RHF's resolver, defaults, and submit handler all line up.
-type ItemFormInput = z.input<typeof createItemSchema>;
-type ItemFormOutput = z.output<typeof createItemSchema>;
 import { UNITS } from "@/lib/domain/constants";
 import { useCategories, useCreateItem, useUpdateItem } from "../hooks";
 import { Button } from "@/components/ui/button";
@@ -28,14 +22,13 @@ import {
 } from "@/components/ui/select";
 import type { InventoryItem } from "@/lib/domain/types";
 
-/**
- * Create/edit form for inventory items. On create it drives POST /api/inventory;
- * on edit it PATCHes metadata only (quantity changes go through the stock
- * adjust flow so every quantity delta is audited).
- *
- * The serial-number field only appears for serial-tracked categories (tyres,
- * rims); for consumables it is hidden and quantity is the sole measure.
- */
+type ItemFormInput = z.input<typeof createItemSchema>;
+type ItemFormOutput = z.output<typeof createItemSchema>;
+
+function getTodayString(): string {
+  return new Date().toISOString().split("T")[0];
+}
+
 export function ItemForm({
   item,
   onDone,
@@ -53,6 +46,7 @@ export function ItemForm({
     handleSubmit,
     watch,
     setValue,
+    clearErrors,
     formState: { errors },
   } = useForm<ItemFormInput, unknown, ItemFormOutput>({
     resolver: zodResolver(createItemSchema),
@@ -60,9 +54,11 @@ export function ItemForm({
       categoryId: item?.categoryId ?? "",
       name: item?.name ?? "",
       brand: item?.brand ?? "",
-      model: item?.model ?? "",
+      supplierName: item?.supplierName ?? "",
+      invoiceNumber: item?.invoiceNumber ?? "",
+      purchaseDate: item?.purchaseDate ?? getTodayString(),
       size: item?.spec ?? "",
-      quantity: item?.quantity ?? 0,
+      quantity: item?.quantity ?? 1,
       unit: (item?.unit as CreateItemInput["unit"]) ?? "pcs",
       lowStockThreshold: item?.lowStockThreshold ?? 5,
       serialNumber: item?.serialNumber ?? "",
@@ -73,15 +69,31 @@ export function ItemForm({
 
   const selectedCategoryId = watch("categoryId");
   const selectedCategory = categories?.find((c) => c.id === selectedCategoryId);
-  const serialTracked = selectedCategory?.serialTracked ?? false;
+  
+  const categoryNameLower = (selectedCategory?.name || "").trim().toLowerCase();
+  const isRimOrTyre =
+    selectedCategory?.serialTracked ||
+    categoryNameLower === "rim" ||
+    categoryNameLower === "tyre" ||
+    categoryNameLower === "rims" ||
+    categoryNameLower === "tyres";
+
   const photoBase64 = watch("photoBase64");
 
-  // Keep the Select (which is not a native input) wired into RHF.
+  // Keep Select inputs registered
   useEffect(() => {
     register("categoryId");
     register("unit");
     register("photoBase64");
   }, [register]);
+
+  // When switching categories away from Rim/Tyre, clear serial number
+  useEffect(() => {
+    if (!isRimOrTyre) {
+      setValue("serialNumber", "");
+      clearErrors("serialNumber");
+    }
+  }, [isRimOrTyre, setValue, clearErrors]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -103,24 +115,46 @@ export function ItemForm({
   };
 
   async function onSubmit(values: CreateItemInput) {
+    if (isRimOrTyre && !values.serialNumber?.trim()) {
+      toast.error(`Serial Number is required for ${selectedCategory?.name || "Rim / Tyre"}.`);
+      return;
+    }
+
     try {
       if (isEdit) {
-        // Metadata only — omit quantity/category which are managed elsewhere.
-        const { name, brand, model, size, unit, lowStockThreshold, remarks, photoBase64 } =
-          values;
-        await updateItem.mutateAsync({
+        const {
           name,
           brand,
-          model,
+          supplierName,
+          invoiceNumber,
+          purchaseDate,
           size,
           unit,
           lowStockThreshold,
           remarks,
           photoBase64,
+          serialNumber,
+        } = values;
+
+        await updateItem.mutateAsync({
+          name,
+          brand,
+          supplierName,
+          invoiceNumber,
+          purchaseDate,
+          size,
+          unit,
+          lowStockThreshold,
+          remarks,
+          photoBase64,
+          serialNumber: isRimOrTyre ? serialNumber : undefined,
         });
         toast.success("Item updated");
       } else {
-        await createItem.mutateAsync(values);
+        await createItem.mutateAsync({
+          ...values,
+          serialNumber: isRimOrTyre ? values.serialNumber : undefined,
+        });
         toast.success("Inventory item added");
       }
       onDone();
@@ -133,14 +167,15 @@ export function ItemForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      {/* 1. Item Image (Optional) */}
       <div className="space-y-2">
-        <Label>Item Image (optional)</Label>
+        <Label>Item Image (Optional)</Label>
         {photoBase64 ? (
           <div className="relative inline-block">
             <img
               src={photoBase64}
               alt="Preview"
-              className="h-28 w-28 rounded-lg object-cover border border-input"
+              className="h-28 w-28 rounded-lg object-cover border border-input shadow-sm"
             />
             <button
               type="button"
@@ -151,8 +186,8 @@ export function ItemForm({
             </button>
           </div>
         ) : (
-          <label className="flex h-28 w-28 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/20 hover:border-primary/50 hover:bg-accent/20 transition">
-            <Camera className="size-6 text-muted-foreground mb-1" />
+          <label className="flex h-24 w-24 cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed border-muted-foreground/20 hover:border-primary/50 hover:bg-accent/20 transition">
+            <Camera className="size-5 text-muted-foreground mb-1" />
             <span className="text-xs text-muted-foreground font-medium">Upload</span>
             <input
               type="file"
@@ -164,16 +199,17 @@ export function ItemForm({
         )}
       </div>
 
+      {/* 2. Category */}
       {!isEdit && (
-        <div className="space-y-2">
-          <Label htmlFor="categoryId">Category</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="categoryId">
+            Category <span className="text-destructive">*</span>
+          </Label>
           <Select
             value={selectedCategoryId}
-            onValueChange={(v) =>
-              setValue("categoryId", v, { shouldValidate: true })
-            }
+            onValueChange={(v) => setValue("categoryId", v, { shouldValidate: true })}
           >
-            <SelectTrigger id="categoryId" aria-invalid={!!errors.categoryId}>
+            <SelectTrigger id="categoryId" className="h-10" aria-invalid={!!errors.categoryId}>
               <SelectValue placeholder="Select a category" />
             </SelectTrigger>
             <SelectContent>
@@ -185,71 +221,128 @@ export function ItemForm({
             </SelectContent>
           </Select>
           {errors.categoryId && (
-            <p className="text-sm text-destructive">
-              {errors.categoryId.message}
-            </p>
+            <p className="text-xs text-destructive">{errors.categoryId.message}</p>
           )}
         </div>
       )}
 
-      <div className="space-y-2">
-        <Label htmlFor="name">Item name</Label>
-        <Input id="name" aria-invalid={!!errors.name} {...register("name")} />
+      {/* 3. Item Name */}
+      <div className="space-y-1.5">
+        <Label htmlFor="name">
+          Item Name <span className="text-destructive">*</span>
+        </Label>
+        <Input
+          id="name"
+          placeholder="e.g. Radial Tyre 295/80 R22.5"
+          className="h-10"
+          aria-invalid={!!errors.name}
+          {...register("name")}
+        />
         {errors.name && (
-          <p className="text-sm text-destructive">{errors.name.message}</p>
+          <p className="text-xs text-destructive">{errors.name.message}</p>
         )}
       </div>
 
+      {/* 4. Brand & Supplier / Party Name */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
+        <div className="space-y-1.5">
           <Label htmlFor="brand">Brand</Label>
-          <Input id="brand" {...register("brand")} />
+          <Input id="brand" placeholder="e.g. Apollo, JK Tyre, Esab" className="h-10" {...register("brand")} />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="model">Model (optional)</Label>
-          <Input id="model" {...register("model")} />
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="size">Size / specification</Label>
-        <Input id="size" placeholder="e.g. 295/80 R22.5" {...register("size")} />
-      </div>
-
-      {serialTracked ? (
-        <div className="space-y-2">
-          <Label htmlFor="serialNumber">Serial number</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="supplierName">Supplier / Party Name</Label>
           <Input
-            id="serialNumber"
-            aria-invalid={!!errors.serialNumber}
-            {...register("serialNumber")}
+            id="supplierName"
+            placeholder="e.g. Shree Tyres, Raj Hardware"
+            className="h-10"
+            {...register("supplierName")}
           />
-          <p className="text-xs text-muted-foreground">
-            {selectedCategory?.name} items are tracked individually by serial
-            number.
-          </p>
         </div>
-      ) : null}
+      </div>
 
+      {/* 5. Invoice / Bill Number & Purchase Date */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label htmlFor="invoiceNumber">Invoice / Bill Number</Label>
+          <Input
+            id="invoiceNumber"
+            placeholder="e.g. INV-1092"
+            className="h-10 font-mono"
+            {...register("invoiceNumber")}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="purchaseDate">Purchase Date</Label>
+          <Input
+            id="purchaseDate"
+            type="date"
+            className="h-10"
+            {...register("purchaseDate")}
+          />
+        </div>
+      </div>
+
+      {/* 6. Size / Specification */}
+      <div className="space-y-1.5">
+        <Label htmlFor="size">Size / Specification</Label>
+        <Input
+          id="size"
+          placeholder="e.g. 295/80 R22.5, 3.15mm, 4 inch"
+          className="h-10"
+          {...register("size")}
+        />
+      </div>
+
+      {/* 7. Serial Number (Only for Rim & Tyre, Required) */}
+      <div className="transition-all duration-300 ease-in-out">
+        {isRimOrTyre && (
+          <div className="space-y-1.5 p-3.5 rounded-xl border border-primary/20 bg-primary/5">
+            <Label htmlFor="serialNumber" className="font-semibold text-primary">
+              Serial Number <span className="text-destructive">*</span>
+            </Label>
+            <Input
+              id="serialNumber"
+              placeholder="e.g. TYR-000125, RIM-00054"
+              className="h-10 font-mono font-medium tracking-wide bg-background"
+              aria-invalid={!!errors.serialNumber}
+              {...register("serialNumber")}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Required for {selectedCategory?.name || "Rim & Tyre"}. Must be unique across inventory.
+            </p>
+            {errors.serialNumber && (
+              <p className="text-xs text-destructive">{errors.serialNumber.message}</p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* 8. Quantity, Unit, Low Stock Alert */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-        <div className="space-y-2">
-          <Label htmlFor="quantity">Quantity</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="quantity">
+            Quantity <span className="text-destructive">*</span>
+          </Label>
           <Input
             id="quantity"
             type="number"
             min={0}
             disabled={isEdit}
+            className="h-10"
             aria-invalid={!!errors.quantity}
             {...register("quantity")}
           />
           {isEdit && (
-            <p className="text-xs text-muted-foreground">
-              Use stock adjust to change quantity.
+            <p className="text-[11px] text-muted-foreground">
+              Use Stock Adjust to alter existing quantity.
             </p>
           )}
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="unit">Unit</Label>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="unit">
+            Unit <span className="text-destructive">*</span>
+          </Label>
           <Select
             value={watch("unit")}
             onValueChange={(v) =>
@@ -258,7 +351,7 @@ export function ItemForm({
               })
             }
           >
-            <SelectTrigger id="unit">
+            <SelectTrigger id="unit" className="h-10">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -270,29 +363,39 @@ export function ItemForm({
             </SelectContent>
           </Select>
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="lowStockThreshold">Low-stock at</Label>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="lowStockThreshold">Low-stock Alert At</Label>
           <Input
             id="lowStockThreshold"
             type="number"
             min={0}
+            className="h-10"
             {...register("lowStockThreshold")}
           />
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="remarks">Remarks</Label>
-        <Textarea id="remarks" rows={2} {...register("remarks")} />
+      {/* 9. Remarks */}
+      <div className="space-y-1.5">
+        <Label htmlFor="remarks">Remarks (Optional)</Label>
+        <Textarea
+          id="remarks"
+          rows={2}
+          placeholder="e.g. Purchased from Shree Tyres under warranty..."
+          className="resize-none text-sm"
+          {...register("remarks")}
+        />
       </div>
 
-      <div className="flex justify-end gap-2 pt-2">
-        <Button type="button" variant="ghost" onClick={onDone}>
+      {/* Footer Buttons */}
+      <div className="flex justify-end gap-2 pt-3">
+        <Button type="button" variant="outline" onClick={onDone} disabled={submitting}>
           Cancel
         </Button>
         <Button type="submit" disabled={submitting}>
-          {submitting && <Loader2 className="size-4 animate-spin" />}
-          {isEdit ? "Save changes" : "Add item"}
+          {submitting && <Loader2 className="mr-2 size-4 animate-spin" />}
+          {isEdit ? "Save Changes" : "Add Inventory Item"}
         </Button>
       </div>
     </form>

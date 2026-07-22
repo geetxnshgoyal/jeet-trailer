@@ -150,11 +150,6 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
         toast.error("Vehicle number is required for installation tracking.");
         return;
       }
-      if (photos.length === 0) {
-        setPhotoError("At least one installation photo is required for tyres and rims.");
-        toast.error("Upload at least one installation photo.");
-        return;
-      }
     }
 
     const photoObjects: InstallationPhoto[] = photos.map((p) => ({
@@ -365,12 +360,10 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
                   </Select>
                 </div>
 
-                {/* Upload Installation Photos (Required) */}
+                {/* Upload Installation Photos (Optional) */}
                 <div className="space-y-2">
                   <Label className="font-medium flex items-center justify-between">
-                    <span>
-                      Installation Photos <span className="text-destructive">*</span>
-                    </span>
+                    <span>Installation Photos (Optional)</span>
                     <span className="text-xs text-muted-foreground font-normal">
                       {photos.length} uploaded
                     </span>
@@ -385,7 +378,7 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
                         Click to upload installation photos
                       </span>
                       <span className="text-[11px] text-muted-foreground">
-                        Required for Tyre & Rim installation proof (PNG, JPG, WEBP)
+                        Optional installation proof for Tyre & Rim (PNG, JPG, WEBP)
                       </span>
                       <input
                         type="file"

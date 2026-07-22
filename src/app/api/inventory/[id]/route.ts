@@ -30,7 +30,10 @@ export const PATCH = handler(
     const item = await updateItem(id, {
       name: patch.name,
       brand: patch.brand || undefined,
-      model: patch.model || undefined,
+      supplierName: patch.supplierName || undefined,
+      invoiceNumber: patch.invoiceNumber || undefined,
+      purchaseDate: patch.purchaseDate || undefined,
+      serialNumber: patch.serialNumber || undefined,
       spec: patch.size || undefined,
       unit: patch.unit,
       lowStockThreshold: patch.lowStockThreshold,

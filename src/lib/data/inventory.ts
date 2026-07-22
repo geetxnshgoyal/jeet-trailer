@@ -57,6 +57,9 @@ export interface CreateItemInput {
   name: string;
   brand: string;
   model?: string;
+  supplierName?: string;
+  invoiceNumber?: string;
+  purchaseDate?: string;
   spec?: string;
   quantity: number;
   unit: string;
@@ -71,8 +74,16 @@ export interface CreateItemInput {
 export async function createItem(
   input: CreateItemInput,
 ): Promise<InventoryItem> {
-  // Serial-tracked categories require a unique serial and are single-unit.
-  if (input.category.serialTracked) {
+  const catName = input.category.name.trim().toLowerCase();
+  const isRimOrTyre =
+    input.category.serialTracked ||
+    catName === "rim" ||
+    catName === "tyre" ||
+    catName === "rims" ||
+    catName === "tyres";
+
+  // Serial-tracked categories (Rim/Tyre) require a unique serial.
+  if (isRimOrTyre) {
     if (!input.serialNumber?.trim()) {
       throw new DomainError(
         "SERIAL_REQUIRED",
@@ -107,14 +118,15 @@ export async function createItem(
     name: input.name,
     brand: input.brand,
     model: input.model,
+    supplierName: input.supplierName,
+    invoiceNumber: input.invoiceNumber,
+    purchaseDate: input.purchaseDate,
     spec: input.spec,
     quantity,
     unit: input.unit,
     lowStockThreshold: threshold,
     status: deriveStockStatus(quantity, threshold),
-    serialNumber: input.category.serialTracked
-      ? input.serialNumber?.trim()
-      : undefined,
+    serialNumber: isRimOrTyre ? input.serialNumber?.trim() : undefined,
     remarks: input.remarks,
     photoBase64: input.photoBase64,
     createdAt: now,
@@ -195,6 +207,10 @@ export interface UpdateItemInput {
   name?: string;
   brand?: string;
   model?: string;
+  supplierName?: string;
+  invoiceNumber?: string;
+  purchaseDate?: string;
+  serialNumber?: string;
   spec?: string;
   unit?: string;
   lowStockThreshold?: number;
@@ -222,6 +238,10 @@ export async function updateItem(
     if (patch.name !== undefined) updates.name = patch.name;
     if (patch.brand !== undefined) updates.brand = patch.brand;
     if (patch.model !== undefined) updates.model = patch.model;
+    if (patch.supplierName !== undefined) updates.supplierName = patch.supplierName;
+    if (patch.invoiceNumber !== undefined) updates.invoiceNumber = patch.invoiceNumber;
+    if (patch.purchaseDate !== undefined) updates.purchaseDate = patch.purchaseDate;
+    if (patch.serialNumber !== undefined) updates.serialNumber = patch.serialNumber;
     if (patch.spec !== undefined) updates.spec = patch.spec;
     if (patch.unit !== undefined) updates.unit = patch.unit;
     if (patch.remarks !== undefined) updates.remarks = patch.remarks;
