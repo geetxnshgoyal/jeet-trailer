@@ -1,4 +1,4 @@
-import type { StockStatus } from "./types";
+import type { StockStatus, TrailerStatus, TrailerStageStatus } from "./types";
 
 /**
  * The seven default inventory categories Jeet Trailers ships with.
@@ -57,8 +57,39 @@ export const COLLECTIONS = {
   categories: "categories",
   inventory: "inventory",
   issues: "issues",
+  trailers: "trailers",
   counters: "counters",
 } as const;
 
 /** Subcollection name under each inventory item. */
 export const ITEM_HISTORY_SUBCOLLECTION = "history";
+
+/** Subcollection name under each trailer. */
+export const TRAILER_HISTORY_SUBCOLLECTION = "history";
+
+/** Counter prefix for auto-generated chassis numbers, e.g. CH-00001. */
+export const CHASSIS_CODE_PREFIX = "CH";
+
+/**
+ * Default production pipeline a new trailer is pre-filled with, in order.
+ * Admins can rename, add, or remove stages per trailer at creation — this is
+ * only the starting template, so changing it never affects builds in flight.
+ */
+export const DEFAULT_WORKSHOP_STAGES: ReadonlyArray<string> = [
+  "Chassis Welding",
+  "Axle & Suspension Fitting",
+  "Body Fabrication",
+  "Painting",
+  "Electrical & Finishing",
+];
+
+export const TRAILER_STATUS_LABELS: Record<TrailerStatus, string> = {
+  in_progress: "In Production",
+  completed: "Completed",
+};
+
+export const TRAILER_STAGE_STATUS_LABELS: Record<TrailerStageStatus, string> = {
+  pending: "Pending",
+  in_progress: "In Progress",
+  completed: "Completed",
+};

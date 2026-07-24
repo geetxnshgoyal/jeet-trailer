@@ -93,6 +93,77 @@ export interface ItemHistoryEvent {
   createdAt: string;
 }
 
+// ── Workshop / production line ───────────────────────────────────────────────
+
+export type TrailerStatus = "in_progress" | "completed";
+
+export type TrailerStageStatus = "pending" | "in_progress" | "completed";
+
+/**
+ * One step of a trailer's production pipeline, embedded on the trailer doc.
+ * `index` is the position in the pipeline (0-based); only the stage at
+ * `currentStageIndex` can be started or completed.
+ */
+export interface TrailerStage {
+  index: number;
+  /** Display name, e.g. "Chassis Welding". */
+  name: string;
+  /** Worker assigned to (or who claimed) this stage. */
+  workerId?: string;
+  workerName?: string;
+  status: TrailerStageStatus;
+  startedAt?: string;
+  completedAt?: string;
+  /** Hand-over note left by the worker on completion. */
+  notes?: string;
+}
+
+/**
+ * A trailer build moving through the workshop. The stage pipeline is embedded
+ * (snapshot at creation, so later template edits never rewrite active builds)
+ * and denormalized `current*` fields keep list queries single-read.
+ */
+export interface TrailerRecord {
+  id: string;
+  /** Human-facing chassis number, e.g. CH-00001. Auto-generated or custom. */
+  chassisNumber: string;
+  /** Trailer model / type, e.g. "22ft Flatbed". */
+  model?: string;
+  description?: string;
+  status: TrailerStatus;
+  /** Index into `stages` of the stage currently holding the chassis. */
+  currentStageIndex: number;
+  currentStageName: string;
+  /** Worker currently holding the chassis (set while a stage is in progress). */
+  currentWorkerId?: string;
+  currentWorkerName?: string;
+  stages: TrailerStage[];
+  completedAt?: string;
+  createdById: string;
+  createdByName: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Immutable event appended to a trailer's `history` subcollection. */
+export type TrailerHistoryEventType =
+  | "created"
+  | "stage_started"
+  | "stage_completed"
+  | "worker_assigned"
+  | "completed";
+
+export interface TrailerHistoryEvent {
+  id: string;
+  type: TrailerHistoryEventType;
+  stageIndex?: number;
+  stageName?: string;
+  actorId: string;
+  actorName: string;
+  note?: string;
+  createdAt: string;
+}
+
 export type InstallationStatus = "issued" | "installed" | "cancelled";
 
 /** A stored installation photo reference. */
