@@ -95,6 +95,49 @@ export const stockAdjustSchema = z.object({
 });
 export type StockAdjustInput = z.infer<typeof stockAdjustSchema>;
 
+// ── Workshop / production line ────────────────────────────────────────────────
+
+/** Chassis number, e.g. CH-00042 or a custom shop code. */
+export const chassisNumberSchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .min(3, "Chassis number is too short")
+  .max(24, "Chassis number is too long")
+  .regex(/^[A-Z0-9-]+$/, "Chassis number can use letters, digits and dashes");
+
+export const createTrailerSchema = z.object({
+  /** Left empty to auto-generate CH-00001-style numbers. */
+  chassisNumber: chassisNumberSchema.optional().or(z.literal("")),
+  model: z.string().trim().max(80).optional().or(z.literal("")),
+  description: z.string().trim().max(500).optional().or(z.literal("")),
+  stages: z
+    .array(
+      z.object({
+        name: trimmed(2, 60, "Stage name"),
+        workerId: z.string().trim().max(64).optional().or(z.literal("")),
+      }),
+    )
+    .min(1, "Add at least one stage")
+    .max(12, "At most 12 stages"),
+});
+export type CreateTrailerInput = z.infer<typeof createTrailerSchema>;
+
+/** Start or complete the trailer's current stage. */
+export const trailerStageActionSchema = z.object({
+  action: z.enum(["start", "complete"]),
+  notes: z.string().trim().max(500).optional().or(z.literal("")),
+});
+export type TrailerStageActionInput = z.infer<typeof trailerStageActionSchema>;
+
+/** Admin (re)assigns a worker to a not-yet-completed stage. */
+export const assignStageWorkerSchema = z.object({
+  stageIndex: z.coerce.number().int().min(0),
+  /** Empty string clears the assignment. */
+  workerId: z.string().trim().max(64),
+});
+export type AssignStageWorkerInput = z.infer<typeof assignStageWorkerSchema>;
+
 // ── Issue & installation ───────────────────────────────────────────────────────
 
 export const createIssueSchema = z.object({
