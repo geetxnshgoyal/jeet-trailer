@@ -36,7 +36,7 @@ export function IssuesTable() {
   const debouncedSearch = useDebouncedValue(search, 300);
   const debouncedVehicle = useDebouncedValue(vehicleNumber, 300);
 
-  const { data: workers } = useWorkersList();
+  const { data: workers } = useWorkersList(isAdmin);
   const { data: issues, isLoading } = useIssues({
     search: debouncedSearch || undefined,
     workerId: workerId === ALL ? undefined : workerId,

@@ -38,9 +38,11 @@ export const GET = handler(async (req: NextRequest) => {
     );
   }
 
+  // Search results are text rows, so drop the inline images: they would
+  // dominate the payload of a request that fires on every keystroke.
   return ok({
     results: {
-      items: items.slice(0, 5),
+      items: items.slice(0, 5).map(({ photoBase64: _photo, ...rest }) => rest),
       issues: issues.slice(0, 5),
       workers: workers.slice(0, 5),
     },

@@ -105,6 +105,9 @@ export function RepairsList() {
 
 function RepairCard({ repair }: { repair: RepairRecord }) {
   const target = repair.vehicleNumber || repair.chassisNumber;
+  // Tolerate records written before the field existed rather than crashing
+  // the whole list on one bad document.
+  const photos = repair.photos ?? [];
 
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">
@@ -135,9 +138,9 @@ function RepairCard({ repair }: { repair: RepairRecord }) {
         </p>
       )}
 
-      {repair.photos.length > 0 && (
+      {photos.length > 0 && (
         <div className="grid grid-cols-4 gap-1.5">
-          {repair.photos.slice(0, 4).map((photo) => (
+          {photos.slice(0, 4).map((photo) => (
             <a
               key={photo.path}
               href={photo.url}

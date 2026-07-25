@@ -21,6 +21,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { InventoryItem } from "@/lib/domain/types";
+import { compressImage, formatBytes } from "@/lib/utils/image";
 
 type ItemFormInput = z.input<typeof createItemSchema>;
 type ItemFormOutput = z.output<typeof createItemSchema>;
@@ -77,18 +78,28 @@ export function ItemForm({
     register("photoBase64");
   }, [register]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  /**
+   * The photo is stored on the item document, so it has to fit inside
+   * Firestore's 1 MB limit once base64 inflates it. Phone photos are several
+   * megabytes, so downscale rather than reject: the old 2 MB cap still let
+   * through images that failed to save.
+   */
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error("Image size must be less than 2MB");
+    e.target.value = "";
+    if (!file) return;
+
+    try {
+      const { dataUrl, bytes } = await compressImage(file);
+      if (bytes > 700_000) {
+        toast.error(
+          `That image is still ${formatBytes(bytes)} after compression. Please use a smaller one.`,
+        );
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setValue("photoBase64", reader.result as string, { shouldValidate: true });
-      };
-      reader.readAsDataURL(file);
+      setValue("photoBase64", dataUrl, { shouldValidate: true });
+    } catch {
+      toast.error("Could not read that image.");
     }
   };
 
