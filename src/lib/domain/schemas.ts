@@ -65,6 +65,7 @@ export const createItemSchema = z.object({
   categoryId: trimmed(1, 64, "Category"),
   name: trimmed(2, 120, "Item name"),
   brand: z.string().trim().max(80).optional().or(z.literal("")),
+  model: z.string().trim().max(80).optional().or(z.literal("")),
   supplierName: z.string().trim().max(120).optional().or(z.literal("")),
   invoiceNumber: z.string().trim().max(80).optional().or(z.literal("")),
   purchaseDate: z.string().trim().optional().or(z.literal("")),
@@ -76,7 +77,6 @@ export const createItemSchema = z.object({
     .int()
     .min(0, "Threshold cannot be negative")
     .default(5),
-  serialNumber: z.string().trim().max(120).optional().or(z.literal("")),
   remarks: z.string().trim().max(500).optional().or(z.literal("")),
   photoBase64: z.string().optional(),
 });

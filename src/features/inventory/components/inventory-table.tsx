@@ -74,13 +74,11 @@ export function InventoryTable({ canManage }: { canManage: boolean }) {
       },
       { accessorKey: "categoryName", header: "Category" },
       {
-        accessorKey: "serialNumber",
-        header: "Serial",
+        accessorKey: "model",
+        header: "Model",
         cell: ({ row }) =>
-          row.original.serialNumber ? (
-            <span className="font-mono text-xs">
-              {row.original.serialNumber}
-            </span>
+          row.original.model ? (
+            <span className="text-sm">{row.original.model}</span>
           ) : (
             <span className="text-muted-foreground">—</span>
           ),
@@ -245,11 +243,11 @@ export function InventoryTable({ canManage }: { canManage: boolean }) {
                         </span>
                       </span>
                     </div>
-                    {item.serialNumber && (
+                    {item.model && (
                       <div className="flex items-center justify-between text-[11px] bg-muted/50 px-2 py-1 rounded">
-                        <span className="text-muted-foreground">Serial</span>
-                        <span className="font-mono text-foreground font-medium">
-                          {item.serialNumber}
+                        <span className="text-muted-foreground">Model</span>
+                        <span className="text-foreground font-medium">
+                          {item.model}
                         </span>
                       </div>
                     )}

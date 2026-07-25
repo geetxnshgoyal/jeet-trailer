@@ -100,12 +100,6 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
     }
   }, [open, user, typedWorkerName, setValue]);
 
-  // Adjust default quantity when item changes
-  useEffect(() => {
-    if (requiresInstallation) {
-      setValue("quantity", 1);
-    }
-  }, [requiresInstallation, setValue]);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -187,7 +181,7 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
       itemId: data.itemId,
       workerId: matched?.id,
       workerName: recipientName,
-      quantity: requiresInstallation ? 1 : Number(data.quantity),
+      quantity: Number(data.quantity),
       notes: data.notes?.trim() || undefined,
       serialNumber: selectedItem?.serialNumber || data.serialNumber || undefined,
       ...(requiresInstallation
@@ -317,18 +311,26 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="quantity" className="font-medium">
-                      Quantity
+                      Quantity <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="quantity"
                       type="number"
-                      disabled={requiresInstallation}
+                      min={1}
+                      max={selectedItem?.quantity || 9999}
                       {...register("quantity", { valueAsNumber: true })}
-                      className="h-10 bg-muted/50"
+                      className="h-10"
                     />
-                    <p className="text-[10px] text-muted-foreground">
-                      Tyres and Rims are issued as 1 per installation record.
-                    </p>
+                    {selectedItem && (
+                      <p className="text-[10px] text-muted-foreground">
+                        Available stock: {selectedItem.quantity} {selectedItem.unit}
+                      </p>
+                    )}
+                    {errors.quantity && (
+                      <p className="text-xs text-destructive">
+                        {errors.quantity.message}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-1.5">
@@ -511,21 +513,6 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
                   )}
                 </div>
               </>
-            )}
-
-            {/* Serial Number if present/required */}
-            {!selectedItem?.serialNumber && requiresInstallation && (
-              <div className="space-y-1.5">
-                <Label htmlFor="serialNumber" className="font-medium">
-                  Serial Number
-                </Label>
-                <Input
-                  id="serialNumber"
-                  placeholder="Enter serial number for tracking"
-                  className="h-10"
-                  {...register("serialNumber")}
-                />
-              </div>
             )}
 
             {/* Notes / Purpose */}

@@ -47,7 +47,10 @@ export function ItemDetail({ id }: Readonly<{ id: string }>) {
     { label: "Brand", value: item.brand || "—" },
     { label: "Model", value: item.model || "—" },
     { label: "Size / spec", value: item.spec || "—" },
-    { label: "Serial number", value: item.serialNumber || "—" },
+    // Only legacy/serial-tracked items carry a serial; hide the row otherwise.
+    ...(item.serialNumber
+      ? [{ label: "Serial number", value: item.serialNumber }]
+      : []),
     { label: "Unit", value: item.unit },
     { label: "Low-stock threshold", value: item.lowStockThreshold },
     { label: "Remarks", value: item.remarks || "—" },
