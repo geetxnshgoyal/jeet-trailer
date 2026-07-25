@@ -135,9 +135,10 @@ export const createTrailerSchema = z.object({
 });
 export type CreateTrailerInput = z.infer<typeof createTrailerSchema>;
 
-/** Start or complete the trailer's current stage. */
+/** Start or complete a stage. Omit stageIndex to act on the current one. */
 export const trailerStageActionSchema = z.object({
   action: z.enum(["start", "complete"]),
+  stageIndex: z.coerce.number().int().min(0).optional(),
   notes: z.string().trim().max(500).optional().or(z.literal("")),
 });
 export type TrailerStageActionInput = z.infer<typeof trailerStageActionSchema>;
