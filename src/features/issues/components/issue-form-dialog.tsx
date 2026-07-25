@@ -310,7 +310,7 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
             {requiresInstallation ? (
               <>
                 {/* Tyre & Rim Layout: Quantity & Vehicle Number */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="quantity" className="font-medium">
                       Quantity <span className="text-destructive">*</span>
@@ -354,7 +354,7 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
                 </div>
 
                 {/* Chassis number & workshop trailer chassis */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="chassisNumber" className="font-medium">
                       Chassis Number <span className="text-destructive">*</span>

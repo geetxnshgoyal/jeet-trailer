@@ -113,7 +113,7 @@ export function TrailerFormDialog({ trigger }: { trigger: React.ReactNode }) {
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="chassisNumber">Chassis Number</Label>
               <Input

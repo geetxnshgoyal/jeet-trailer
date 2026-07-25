@@ -153,7 +153,7 @@ export function WorkerFormDialog({ worker, trigger }: Readonly<WorkerFormDialogP
             </>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="phone">Phone (Optional)</Label>
               <Input id="phone" placeholder="e.g. +91 9876543210" {...register("phone")} />
