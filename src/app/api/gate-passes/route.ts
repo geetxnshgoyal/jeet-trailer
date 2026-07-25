@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireInventoryAccess } from "@/lib/auth/session";
+import { requireArea } from "@/lib/auth/session";
 import { ok, handler } from "@/lib/api/response";
 import { createGatePassSchema } from "@/lib/domain/schemas";
 import { createGatePass, listGatePasses } from "@/lib/data/gate-passes";
@@ -9,7 +9,7 @@ import { createGatePass, listGatePasses } from "@/lib/data/gate-passes";
  * Stock-facing, so workshop accounts are refused.
  */
 export const GET = handler(async (req: NextRequest) => {
-  await requireInventoryAccess();
+  await requireArea("gatePass");
   const params = req.nextUrl.searchParams;
 
   const gatePasses = await listGatePasses({
@@ -28,7 +28,7 @@ export const GET = handler(async (req: NextRequest) => {
  * was not removed, nor vice versa.
  */
 export const POST = handler(async (req: NextRequest) => {
-  const user = await requireInventoryAccess();
+  const user = await requireArea("gatePass");
   const input = createGatePassSchema.parse(await req.json());
 
   const gatePass = await createGatePass({

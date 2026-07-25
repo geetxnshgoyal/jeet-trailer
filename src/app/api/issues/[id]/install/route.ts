@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireInventoryAccess } from "@/lib/auth/session";
+import { requireArea } from "@/lib/auth/session";
 import { ok, handler, DomainError } from "@/lib/api/response";
 import { completeInstallationSchema } from "@/lib/domain/schemas";
 import { getIssue, completeInstallation } from "@/lib/data/issues";
@@ -17,7 +17,7 @@ import type { InstallationPhoto } from "@/lib/domain/types";
  */
 export const POST = handler(
   async (req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
-    const user = await requireInventoryAccess();
+    const user = await requireArea("issues");
     const { id } = await ctx.params;
 
     const body = await req.json().catch(() => ({}));

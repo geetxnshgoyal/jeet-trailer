@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireRole, requireInventoryAccess } from "@/lib/auth/session";
+import { requireRole, requireArea } from "@/lib/auth/session";
 import { ok, handler, DomainError } from "@/lib/api/response";
 import { updateItemSchema } from "@/lib/domain/schemas";
 import { getItem, updateItem, deleteItem } from "@/lib/data/inventory";
@@ -9,7 +9,7 @@ import { getItem, updateItem, deleteItem } from "@/lib/data/inventory";
  */
 export const GET = handler(
   async (_req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
-    await requireInventoryAccess();
+    await requireArea("inventory");
     const { id } = await ctx.params;
     const item = await getItem(id);
     if (!item) throw new DomainError("NOT_FOUND", "Item not found", 404);
@@ -23,7 +23,7 @@ export const GET = handler(
  */
 export const PATCH = handler(
   async (req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
-    const actor = await requireRole("admin");
+    const actor = await requireArea("inventory");
     const { id } = await ctx.params;
     const patch = updateItemSchema.parse(await req.json());
 

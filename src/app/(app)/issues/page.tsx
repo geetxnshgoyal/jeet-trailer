@@ -1,6 +1,6 @@
 import { IssuesTable } from "@/features/issues/components/issues-table";
 import { requireUser } from "@/lib/auth/session";
-import { canAccessInventory } from "@/lib/domain/constants";
+import { canAccess, landingPath } from "@/lib/domain/permissions";
 import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
@@ -10,8 +10,7 @@ export const dynamic = "force-dynamic";
  */
 export default async function IssuesPage() {
   const user = await requireUser();
-  // Workshop accounts have no stock access; send them to their own area.
-  if (!canAccessInventory(user.role)) redirect("/workshop");
+  if (!canAccess(user.role, "issues")) redirect(landingPath(user.role));
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-1">

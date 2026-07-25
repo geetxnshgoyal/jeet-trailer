@@ -10,18 +10,19 @@ import {
   Tags,
   type LucideIcon,
 } from "lucide-react";
+import { canAccess, type Area } from "@/lib/domain/permissions";
 import type { Role } from "@/lib/domain/types";
 
 /**
- * Sidebar navigation, filtered by role. Workers see a reduced set (no user
- * management, categories, or reports, matching their permission scope).
+ * Sidebar navigation. Each item names the area it belongs to, so what a role
+ * can see is decided in one place (see lib/domain/permissions) rather than
+ * being restated here and drifting from what the API actually allows.
  */
 export interface NavItem {
   label: string;
   href: string;
   icon: LucideIcon;
-  /** Roles allowed to see this item. Omit for all authenticated users. */
-  roles?: Role[];
+  area: Area;
 }
 
 export const NAV_ITEMS: NavItem[] = [
@@ -29,33 +30,23 @@ export const NAV_ITEMS: NavItem[] = [
     label: "Dashboard",
     href: "/dashboard",
     icon: LayoutDashboard,
-    roles: ["admin", "worker"],
+    area: "dashboard",
   },
+  { label: "Inventory", href: "/inventory", icon: Package, area: "inventory" },
+  { label: "Issues", href: "/issues", icon: ClipboardList, area: "issues" },
+  { label: "Gate Pass", href: "/gate-pass", icon: FileOutput, area: "gatePass" },
+  { label: "Workshop", href: "/workshop", icon: Factory, area: "workshop" },
   {
-    label: "Inventory",
-    href: "/inventory",
-    icon: Package,
-    roles: ["admin", "worker"],
+    label: "Repairs",
+    href: "/workshop/repairs",
+    icon: Wrench,
+    area: "repairs",
   },
-  {
-    label: "Issues",
-    href: "/issues",
-    icon: ClipboardList,
-    roles: ["admin", "worker"],
-  },
-  {
-    label: "Gate Pass",
-    href: "/gate-pass",
-    icon: FileOutput,
-    roles: ["admin", "worker"],
-  },
-  { label: "Workshop", href: "/workshop", icon: Factory },
-  { label: "Repairs", href: "/workshop/repairs", icon: Wrench },
-  { label: "Categories", href: "/categories", icon: Tags, roles: ["admin"] },
-  { label: "Workers", href: "/workers", icon: Users, roles: ["admin"] },
-  { label: "Reports", href: "/reports", icon: FileBarChart, roles: ["admin"] },
+  { label: "Categories", href: "/categories", icon: Tags, area: "categories" },
+  { label: "Workers", href: "/workers", icon: Users, area: "workers" },
+  { label: "Reports", href: "/reports", icon: FileBarChart, area: "reports" },
 ];
 
 export function navItemsForRole(role: Role): NavItem[] {
-  return NAV_ITEMS.filter((item) => !item.roles || item.roles.includes(role));
+  return NAV_ITEMS.filter((item) => canAccess(role, item.area));
 }

@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireUser, requireRole } from "@/lib/auth/session";
+import { requireRole, requireArea } from "@/lib/auth/session";
 import { ok, handler, DomainError } from "@/lib/api/response";
 import { createTrailerSchema } from "@/lib/domain/schemas";
 import { createTrailer, listTrailers } from "@/lib/data/trailers";
@@ -12,7 +12,7 @@ import type { AppUser, TrailerRecord } from "@/lib/domain/types";
  * Workers use `workerId=me` to see builds currently waiting on them.
  */
 export const GET = handler(async (req: NextRequest) => {
-  const user = await requireUser();
+  const user = await requireArea("workshop");
   const params = req.nextUrl.searchParams;
 
   const workerParam = params.get("workerId") ?? undefined;

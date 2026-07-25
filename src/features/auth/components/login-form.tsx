@@ -8,6 +8,7 @@ import { Loader2, Truck } from "lucide-react";
 import { toast } from "sonner";
 import type { z } from "zod";
 import { loginSchema } from "@/lib/domain/schemas";
+import { landingPath } from "@/lib/domain/permissions";
 import { signIn } from "@/lib/auth/auth-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,7 +41,9 @@ export function LoginForm({ next }: { next?: string }) {
       const user = await signIn(values.email, values.password);
       toast.success(`Welcome back, ${user.name}`);
       // Respect a ?next= redirect target, but only if it is a same-site path.
-      const dest = next && next.startsWith("/") ? next : "/dashboard";
+      // Otherwise send the user to the one area their role can actually use:
+      // only admins have a dashboard.
+      const dest = next && next.startsWith("/") ? next : landingPath(user.role);
       router.replace(dest);
       router.refresh();
     } catch (err) {

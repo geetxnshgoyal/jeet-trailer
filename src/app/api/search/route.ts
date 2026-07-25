@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireInventoryAccess } from "@/lib/auth/session";
+import { requireArea } from "@/lib/auth/session";
 import { ok, handler } from "@/lib/api/response";
 import { listItems } from "@/lib/data/inventory";
 import { listIssues } from "@/lib/data/issues";
@@ -8,7 +8,7 @@ import { adminDb } from "@/lib/firebase/admin";
 import type { AppUser } from "@/lib/domain/types";
 
 export const GET = handler(async (req: NextRequest) => {
-  const user = await requireInventoryAccess();
+  const user = await requireArea("inventory");
   const { searchParams } = new URL(req.url);
   const query = searchParams.get("q")?.trim().toLowerCase() || "";
 

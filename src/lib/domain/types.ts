@@ -8,7 +8,7 @@
  */
 
 /** User roles. Stored both as a Firebase Auth custom claim and on the users doc. */
-export type Role = "admin" | "worker" | "workshop";
+export type Role = "admin" | "store" | "staff" | "workshop";
 
 export interface AppUser {
   /** Firebase Auth UID. */

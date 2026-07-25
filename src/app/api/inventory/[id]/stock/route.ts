@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireRole } from "@/lib/auth/session";
+import { requireRole, requireArea } from "@/lib/auth/session";
 import { ok, handler } from "@/lib/api/response";
 import { stockAdjustSchema } from "@/lib/domain/schemas";
 import { adjustStock } from "@/lib/data/inventory";
@@ -12,7 +12,7 @@ import { adjustStock } from "@/lib/data/inventory";
  */
 export const POST = handler(
   async (req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
-    const actor = await requireRole("admin");
+    const actor = await requireArea("inventory");
     const { id } = await ctx.params;
     const { delta, reason, partyName, billNumber } = stockAdjustSchema.parse(
       await req.json(),

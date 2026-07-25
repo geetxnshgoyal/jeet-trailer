@@ -6,6 +6,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { createWorkerSchema, updateWorkerSchema } from "@/lib/domain/schemas";
 import type { Role } from "@/lib/domain/types";
+import {
+  USER_ROLES,
+  ROLE_LABELS,
+  ROLE_DESCRIPTIONS,
+} from "@/lib/domain/constants";
+import { normalizeRole } from "@/lib/domain/permissions";
 import { useCreateWorker, useUpdateWorker } from "../hooks";
 import { toast } from "sonner";
 import {
@@ -69,7 +75,7 @@ export function WorkerFormDialog({ worker, trigger }: Readonly<WorkerFormDialogP
           email: "",
           password: "",
           phone: "",
-          role: "worker",
+          role: "store",
           active: true,
         },
   });
@@ -173,14 +179,15 @@ export function WorkerFormDialog({ worker, trigger }: Readonly<WorkerFormDialogP
                   <SelectValue placeholder="Select Role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="worker">Worker</SelectItem>
-                  <SelectItem value="workshop">Workshop Worker</SelectItem>
-                  <SelectItem value="admin">Administrator</SelectItem>
+                  {USER_ROLES.map((role) => (
+                    <SelectItem key={role} value={role}>
+                      {ROLE_LABELS[role]}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                Workshop workers see only the production line and repairs, not
-                inventory or issues.
+                {ROLE_DESCRIPTIONS[normalizeRole(selectedRole)]}
               </p>
               {errors.role && (
                 <p className="text-xs text-destructive">{errors.role.message?.toString()}</p>

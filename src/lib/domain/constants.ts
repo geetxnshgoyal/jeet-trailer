@@ -36,18 +36,22 @@ export const UNITS = ["pcs", "packet", "roll", "box", "meter", "kg", "set"] as c
  *  - worker: inventory, issues and installations.
  *  - workshop: the production line and repairs only, no inventory or issues.
  */
-export const USER_ROLES = ["admin", "worker", "workshop"] as const;
+export const USER_ROLES = ["admin", "store", "staff", "workshop"] as const;
 
 export const ROLE_LABELS: Record<(typeof USER_ROLES)[number], string> = {
-  admin: "Admin",
-  worker: "Worker",
+  admin: "Administrator",
+  store: "Store Worker",
+  staff: "Staff",
   workshop: "Workshop Worker",
 };
 
-/** Roles allowed to read or move stock. Workshop staff are deliberately out. */
-export function canAccessInventory(role: string): boolean {
-  return role === "admin" || role === "worker";
-}
+/** What each role is for, shown when assigning one. */
+export const ROLE_DESCRIPTIONS: Record<(typeof USER_ROLES)[number], string> = {
+  admin: "Full access to everything",
+  store: "Inventory and issues only",
+  staff: "Gate passes only",
+  workshop: "Workshop and repairs only",
+};
 
 /**
  * Categories that never carry serial numbers, whatever their stored flag says.

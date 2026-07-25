@@ -46,14 +46,16 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     value,
   }));
 
-  // 2. Count workers
+  // 2. Count staff. Counting a single role name would silently read zero now
+  // that the roles are split (store, staff, workshop, plus legacy "worker"),
+  // so count every active non-admin account instead.
   const workersSnap = await adminDb()
     .collection(COLLECTIONS.users)
-    .where("role", "==", "worker")
     .where("active", "==", true)
-    .count()
     .get();
-  const totalWorkers = workersSnap.data().count;
+  const totalWorkers = workersSnap.docs.filter(
+    (d) => (d.data() as { role?: string }).role !== "admin",
+  ).length;
 
   // 3. Count pending installations (status = "issued")
   const pendingSnap = await adminDb()

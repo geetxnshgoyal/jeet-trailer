@@ -3,7 +3,8 @@ import { cookies } from "next/headers";
 import { cache } from "react";
 import { adminAuth, adminDb } from "@/lib/firebase/admin";
 import { serverEnv } from "@/lib/env";
-import { COLLECTIONS, canAccessInventory } from "@/lib/domain/constants";
+import { COLLECTIONS } from "@/lib/domain/constants";
+import { canAccess, type Area } from "@/lib/domain/permissions";
 import type { AppUser, Role } from "@/lib/domain/types";
 
 /**
@@ -96,14 +97,16 @@ export async function requireRole(role: Role): Promise<SessionUser> {
 }
 
 /**
- * Require a user who may see stock. Workshop staff are restricted to the
- * production line and repairs, so hiding the nav is not enough: the API has
- * to refuse them too, or the data is a URL away.
+ * Require a user permitted in a given area of the app.
+ *
+ * Roles are confined to their own part of the business, so every route that
+ * serves data has to check: hiding a nav item only shapes the UI, and the
+ * endpoint behind it stays reachable to anyone who knows the URL.
  */
-export async function requireInventoryAccess(): Promise<SessionUser> {
+export async function requireArea(area: Area): Promise<SessionUser> {
   const user = await requireUser();
-  if (!canAccessInventory(user.role)) {
-    throw new AuthError("FORBIDDEN", "Not available for workshop accounts");
+  if (!canAccess(user.role, area)) {
+    throw new AuthError("FORBIDDEN", "Your role does not have access to this");
   }
   return user;
 }

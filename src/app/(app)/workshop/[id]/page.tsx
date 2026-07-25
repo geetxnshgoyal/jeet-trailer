@@ -1,5 +1,7 @@
 import { TrailerDetail } from "@/features/workshop/components/trailer-detail";
 import { requireUser } from "@/lib/auth/session";
+import { canAccess, landingPath } from "@/lib/domain/permissions";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +13,8 @@ export default async function TrailerDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
-  await requireUser();
+  const user = await requireUser();
+  if (!canAccess(user.role, "workshop")) redirect(landingPath(user.role));
   const { id } = await params;
   return <TrailerDetail id={id} />;
 }

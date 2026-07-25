@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireUser } from "@/lib/auth/session";
+import { requireArea } from "@/lib/auth/session";
 import { ok, handler } from "@/lib/api/response";
 import { createRepairSchema } from "@/lib/domain/schemas";
 import { createRepair, listRepairs } from "@/lib/data/repairs";
@@ -9,7 +9,7 @@ import { createRepair, listRepairs } from "@/lib/data/repairs";
  * Open to any signed-in user, including workshop accounts.
  */
 export const GET = handler(async (req: NextRequest) => {
-  const user = await requireUser();
+  const user = await requireArea("repairs");
   const params = req.nextUrl.searchParams;
 
   const workerParam = params.get("workerId") ?? undefined;
@@ -27,7 +27,7 @@ export const GET = handler(async (req: NextRequest) => {
  * against the returned id, since they need the record to exist first.
  */
 export const POST = handler(async (req: NextRequest) => {
-  const user = await requireUser();
+  const user = await requireArea("repairs");
   const input = createRepairSchema.parse(await req.json());
 
   const repair = await createRepair({

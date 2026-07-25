@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireRole, requireUser } from "@/lib/auth/session";
+import { requireRole, requireArea } from "@/lib/auth/session";
 import { ok, handler } from "@/lib/api/response";
 import { createCategorySchema } from "@/lib/domain/schemas";
 import {
@@ -13,7 +13,7 @@ import {
  * Seeds the seven defaults on first call so a fresh project is never empty.
  */
 export const GET = handler(async () => {
-  await requireUser();
+  await requireArea("inventory");
   await seedDefaultCategories();
   const categories = await listCategories();
   return ok({ categories });

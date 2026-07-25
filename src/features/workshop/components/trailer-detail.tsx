@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useTrailer, useTrailerStageAction, useAssignStageWorker } from "../hooks";
+import { normalizeRole } from "@/lib/domain/permissions";
 import { useWorkersList } from "@/features/issues/hooks";
 import { TrailerStatusBadge, StageStatusBadge } from "./trailer-badges";
 import { Button } from "@/components/ui/button";
@@ -384,7 +385,11 @@ function AssignWorkerSelect({
 }) {
   const { data: workers } = useWorkersList();
   const assign = useAssignStageWorker(trailer.id);
-  const activeWorkers = workers?.filter((w) => w.active && w.role === "worker") ?? [];
+  // Only workshop staff belong on a production stage.
+  const activeWorkers =
+    workers?.filter(
+      (w) => w.active && normalizeRole(w.role) === "workshop",
+    ) ?? [];
 
   return (
     <Select

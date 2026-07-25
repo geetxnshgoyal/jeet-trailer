@@ -1,11 +1,14 @@
 import { RepairsList } from "@/features/repairs/components/repairs-list";
 import { requireUser } from "@/lib/auth/session";
+import { canAccess, landingPath } from "@/lib/domain/permissions";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 /** Workshop repair log. Open to workshop staff, workers and admins. */
 export default async function RepairsPage() {
-  await requireUser();
+  const user = await requireUser();
+  if (!canAccess(user.role, "repairs")) redirect(landingPath(user.role));
 
   return (
     <div className="space-y-4">
