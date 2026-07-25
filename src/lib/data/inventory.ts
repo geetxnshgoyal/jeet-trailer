@@ -278,6 +278,8 @@ export async function adjustStock(input: {
   actorId: string;
   actorName: string;
   note?: string;
+  partyName?: string;
+  billNumber?: string;
 }): Promise<InventoryItem> {
   const ref = itemsCol().doc(input.itemId);
   return adminDb().runTransaction(async (tx) => {
@@ -311,6 +313,8 @@ export async function adjustStock(input: {
         resultingQuantity: nextQty,
         actorId: input.actorId,
         actorName: input.actorName,
+        partyName: input.partyName?.trim() || undefined,
+        billNumber: input.billNumber?.trim() || undefined,
         note:
           input.note ??
           `Stock ${input.delta >= 0 ? "increased" : "reduced"} by ${Math.abs(

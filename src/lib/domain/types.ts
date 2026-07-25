@@ -87,6 +87,10 @@ export interface ItemHistoryEvent {
   /** Linked issue, for issued/installed events. */
   issueId?: string;
   vehicleNumber?: string;
+  /** Supplier/party the stock came from (or went to), for stock adjustments. */
+  partyName?: string;
+  /** Purchase bill / invoice number backing a stock adjustment. */
+  billNumber?: string;
   actorId: string;
   actorName: string;
   note?: string;
@@ -193,11 +197,16 @@ export interface IssueRecord {
   categoryName: string;
   quantity: number;
   serialNumber?: string;
+  /** Empty string when issued to a free-typed name without a portal account. */
   workerId: string;
   workerName: string;
   vehicleNumber: string;
   /** Reserved for future Vehicle Management module. */
   vehicleId?: string;
+  /** Workshop chassis the item was installed on (in-production trailer). */
+  chassisNumber?: string;
+  /** Linked workshop trailer, when chassisNumber matches one. */
+  trailerId?: string;
   status: InstallationStatus;
   issuedAt: string;
   installedAt?: string;

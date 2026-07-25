@@ -48,13 +48,15 @@ export function IssueDetail({ id }: { id: string }) {
         notes: notes || undefined,
         // Send the uploaded photo refs in the body
         photos: uploadRes.photos,
-      } as any);
+      });
 
       toast.success("Installation marked complete!");
       setFiles([]);
       setNotes("");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to complete installation.");
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? err.message : "Failed to complete installation.",
+      );
     } finally {
       setSubmitting(false);
     }
@@ -127,8 +129,12 @@ export function IssueDetail({ id }: { id: string }) {
                 <Truck className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">Vehicle Number</p>
-                <p className="font-semibold tracking-wide font-mono text-foreground">{issue.vehicleNumber || "N/A"}</p>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                  {issue.chassisNumber && !issue.vehicleNumber ? "Trailer Chassis" : "Vehicle Number"}
+                </p>
+                <p className="font-semibold tracking-wide font-mono text-foreground">
+                  {issue.vehicleNumber || issue.chassisNumber || "N/A"}
+                </p>
               </div>
             </div>
 

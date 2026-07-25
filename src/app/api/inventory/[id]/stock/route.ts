@@ -14,7 +14,9 @@ export const POST = handler(
   async (req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
     const actor = await requireRole("admin");
     const { id } = await ctx.params;
-    const { delta, reason } = stockAdjustSchema.parse(await req.json());
+    const { delta, reason, partyName, billNumber } = stockAdjustSchema.parse(
+      await req.json(),
+    );
 
     const item = await adjustStock({
       itemId: id,
@@ -22,6 +24,8 @@ export const POST = handler(
       actorId: actor.uid,
       actorName: actor.name,
       note: reason,
+      partyName: partyName || undefined,
+      billNumber: billNumber || undefined,
     });
     return ok({ item });
   },

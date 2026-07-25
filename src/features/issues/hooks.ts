@@ -52,8 +52,10 @@ export function useCreateIssue() {
     mutationFn: (body: {
       itemId: string;
       workerId?: string;
+      workerName?: string;
       quantity: number;
       vehicleNumber?: string;
+      chassisNumber?: string;
       serialNumber?: string;
       status?: "issued" | "installed" | "cancelled";
       photos?: { path: string; url: string; uploadedAt: string }[];
@@ -70,8 +72,10 @@ export function useCreateIssue() {
 export function useCompleteInstallation(id: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { notes?: string }) =>
-      api.post<{ issue: IssueRecord }>(`/api/issues/${id}/install`, body),
+    mutationFn: (body: {
+      notes?: string;
+      photos?: { path: string; url: string; uploadedAt: string }[];
+    }) => api.post<{ issue: IssueRecord }>(`/api/issues/${id}/install`, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: issueKeys.all });
       qc.invalidateQueries({ queryKey: issueKeys.detail(id) });

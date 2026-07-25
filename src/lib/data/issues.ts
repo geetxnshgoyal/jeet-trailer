@@ -43,12 +43,20 @@ export interface CreateIssueInput {
   itemId: string;
   quantity: number;
   vehicleNumber?: string;
+  /** In-production trailer chassis the item goes onto (alternative to vehicle). */
+  chassisNumber?: string;
+  /** Linked workshop trailer doc, when the chassis matched one. */
+  trailerId?: string;
   serialNumber?: string;
   notes?: string;
   status?: InstallationStatus;
   photos?: InstallationPhoto[];
+  /** Recipient. workerId is "" for free-typed names without portal accounts. */
   workerId: string;
   workerName: string;
+  /** Session user performing the issue — recorded on the history event. */
+  actorId: string;
+  actorName: string;
 }
 
 export async function createIssue(
@@ -93,6 +101,9 @@ export async function createIssue(
     const issueStatus: InstallationStatus =
       input.status || (hasPhotos ? "installed" : "issued");
     const vehicleNo = input.vehicleNumber?.trim() || "";
+    const chassisNo = input.chassisNumber?.trim().toUpperCase() || "";
+    /** Display target for notes: registered vehicle or workshop chassis. */
+    const target = vehicleNo || (chassisNo ? `chassis ${chassisNo}` : "");
 
     const record: IssueRecord = {
       id: issueRef.id,
@@ -108,11 +119,14 @@ export async function createIssue(
       vehicleNumber: vehicleNo,
       status: issueStatus,
       issuedAt: now,
-      installedAt: issueStatus === "installed" ? now : undefined,
+      // Firestore rejects undefined fields — only set installedAt when real.
+      ...(issueStatus === "installed" ? { installedAt: now } : {}),
       photos: input.photos || [],
       createdAt: now,
       updatedAt: now,
       ...(serialNumber ? { serialNumber } : {}),
+      ...(chassisNo ? { chassisNumber: chassisNo } : {}),
+      ...(input.trailerId ? { trailerId: input.trailerId } : {}),
       ...(input.notes?.trim() ? { notes: input.notes.trim() } : {}),
     };
 
@@ -123,12 +137,12 @@ export async function createIssue(
       resultingQuantity: nextQty,
       issueId: issueRef.id,
       vehicleNumber: vehicleNo,
-      actorId: input.workerId,
-      actorName: input.workerName,
+      actorId: input.actorId,
+      actorName: input.actorName,
       createdAt: now,
-      note: vehicleNo
-        ? `Issued ${input.quantity} ${item.unit} for vehicle ${vehicleNo}`
-        : `Issued ${input.quantity} ${item.unit}`,
+      note: target
+        ? `Issued ${input.quantity} ${item.unit} to ${input.workerName} for ${vehicleNo ? `vehicle ${vehicleNo}` : target}`
+        : `Issued ${input.quantity} ${item.unit} to ${input.workerName}`,
     };
 
     // ---- writes ----
@@ -195,7 +209,11 @@ export async function completeInstallation(
       actorId: input.actorId,
       actorName: input.actorName,
       createdAt: now,
-      note: `Installed on vehicle ${issue.vehicleNumber}`,
+      note: issue.vehicleNumber
+        ? `Installed on vehicle ${issue.vehicleNumber}`
+        : issue.chassisNumber
+          ? `Installed on chassis ${issue.chassisNumber}`
+          : "Installed",
     };
 
     tx.update(issueRef, {
@@ -249,7 +267,7 @@ export async function listIssues(
   if (filter.search?.trim()) {
     const needle = filter.search.trim().toLowerCase();
     issues = issues.filter((it) =>
-      [it.code, it.itemName, it.itemCode, it.workerName, it.vehicleNumber, it.serialNumber]
+      [it.code, it.itemName, it.itemCode, it.workerName, it.vehicleNumber, it.chassisNumber, it.serialNumber]
         .filter(Boolean)
         .some((f) => f!.toLowerCase().includes(needle)),
     );

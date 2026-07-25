@@ -35,9 +35,13 @@ export const POST = handler(async (req: NextRequest) => {
   const user = await requireUser();
   const input = createIssueSchema.parse(await req.json());
 
+  // Resolve the recipient: a workerId links a portal account; otherwise a
+  // free-typed name is recorded as-is (workerId "") so items can be issued to
+  // floor workers without accounts. Defaults to the session user.
   let targetWorkerId = user.uid;
   let targetWorkerName = user.name;
 
+  const typedName = input.workerName?.trim();
   if (input.workerId && input.workerId !== user.uid) {
     const workerSnap = await adminDb()
       .collection(COLLECTIONS.users)
@@ -48,18 +52,42 @@ export const POST = handler(async (req: NextRequest) => {
       targetWorkerId = workerData.id || input.workerId;
       targetWorkerName = workerData.name;
     }
+  } else if (
+    !input.workerId &&
+    typedName &&
+    typedName.toLowerCase() !== user.name.toLowerCase()
+  ) {
+    targetWorkerId = "";
+    targetWorkerName = typedName;
+  }
+
+  // A chassis install links to the workshop trailer when the number matches
+  // one; unmatched chassis numbers are still recorded as plain text.
+  const chassisNumber = input.chassisNumber?.trim().toUpperCase() || "";
+  let trailerId: string | undefined;
+  if (chassisNumber) {
+    const trailerSnap = await adminDb()
+      .collection(COLLECTIONS.trailers)
+      .where("chassisNumber", "==", chassisNumber)
+      .limit(1)
+      .get();
+    trailerId = trailerSnap.empty ? undefined : trailerSnap.docs[0].id;
   }
 
   const issue = await createIssue({
     itemId: input.itemId,
     quantity: input.quantity,
     vehicleNumber: input.vehicleNumber || "",
+    chassisNumber: chassisNumber || undefined,
+    trailerId,
     serialNumber: input.serialNumber || undefined,
     notes: input.notes || undefined,
     status: input.status,
     photos: input.photos,
     workerId: targetWorkerId,
     workerName: targetWorkerName,
+    actorId: user.uid,
+    actorName: user.name,
   });
 
   return ok({ issue }, 201);

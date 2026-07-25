@@ -92,6 +92,9 @@ export const stockAdjustSchema = z.object({
     .int()
     .refine((n) => n !== 0, "Adjustment cannot be zero"),
   reason: trimmed(2, 200, "Reason"),
+  /** Supplier/party the stock came from — free text, recorded in history. */
+  partyName: z.string().trim().max(120).optional().or(z.literal("")),
+  billNumber: z.string().trim().max(80).optional().or(z.literal("")),
 });
 export type StockAdjustInput = z.infer<typeof stockAdjustSchema>;
 
@@ -143,8 +146,12 @@ export type AssignStageWorkerInput = z.infer<typeof assignStageWorkerSchema>;
 export const createIssueSchema = z.object({
   itemId: trimmed(1, 64, "Item"),
   workerId: z.string().trim().optional(),
+  /** Free-typed recipient name for people without portal accounts. */
+  workerName: z.string().trim().max(80).optional().or(z.literal("")),
   quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
   vehicleNumber: vehicleNumberSchema.optional().or(z.literal("")),
+  /** For installs on an in-production trailer instead of a registered vehicle. */
+  chassisNumber: chassisNumberSchema.optional().or(z.literal("")),
   serialNumber: z.string().trim().max(120).optional().or(z.literal("")),
   status: z.enum(["issued", "installed", "cancelled"]).optional(),
   photos: z
