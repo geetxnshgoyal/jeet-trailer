@@ -56,6 +56,7 @@ export function useCreateIssue() {
       quantity: number;
       vehicleNumber?: string;
       chassisNumber?: string;
+      trailerChassisNumber?: string;
       serialNumber?: string;
       status?: "issued" | "installed" | "cancelled";
       photos?: { path: string; url: string; uploadedAt: string }[];

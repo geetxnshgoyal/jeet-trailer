@@ -81,6 +81,8 @@ export function ReportsPage() {
       { accessorKey: "itemCode", header: "Item Code" },
       { accessorKey: "workerName", header: "Worker" },
       { accessorKey: "vehicleNumber", header: "Vehicle" },
+      { accessorKey: "chassisNumber", header: "Chassis" },
+      { accessorKey: "trailerChassisNumber", header: "Trailer Chassis" },
       { accessorKey: "quantity", header: "Qty" },
       { accessorKey: "status", header: "Status" },
       {
@@ -98,6 +100,8 @@ export function ReportsPage() {
       { accessorKey: "name", header: "Item" },
       { accessorKey: "categoryName", header: "Category" },
       { accessorKey: "brand", header: "Brand" },
+      { accessorKey: "model", header: "Model" },
+      { accessorKey: "spec", header: "Size / Spec" },
       { accessorKey: "quantity", header: "Qty" },
       { accessorKey: "unit", header: "Unit" },
       { accessorKey: "status", header: "Status" },
@@ -110,12 +114,18 @@ export function ReportsPage() {
     const isInventory = activeTab === "inventory" || activeTab === "low_stock";
     
     const headers = isInventory
-      ? ["Code", "Item", "Category", "Brand", "Qty", "Unit", "Status"]
-      : ["Code", "Item", "Item Code", "Worker", "Vehicle", "Qty", "Status", "Issued At"];
-      
+      ? ["Code", "Item", "Category", "Brand", "Model", "Size / Spec", "Qty", "Unit", "Status"]
+      : [
+          "Code", "Item", "Item Code", "Issued To", "Vehicle", "Chassis",
+          "Trailer Chassis", "Qty", "Status", "Issued At",
+        ];
+
     const fields = isInventory
-      ? ["code", "name", "categoryName", "brand", "quantity", "unit", "status"]
-      : ["code", "itemName", "itemCode", "workerName", "vehicleNumber", "quantity", "status", "issuedAt"];
+      ? ["code", "name", "categoryName", "brand", "model", "spec", "quantity", "unit", "status"]
+      : [
+          "code", "itemName", "itemCode", "workerName", "vehicleNumber",
+          "chassisNumber", "trailerChassisNumber", "quantity", "status", "issuedAt",
+        ];
 
     const formattedData = activeData.map((d: any) => ({
       ...d,
