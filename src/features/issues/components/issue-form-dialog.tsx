@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createIssueSchema } from "@/lib/domain/schemas";
 import { useCreateIssue, useInventoryForIssues, useWorkersList } from "../hooks";
 import { useTrailers } from "@/features/workshop/hooks";
-import { useAuth } from "@/lib/auth/auth-context";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -29,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Loader2, Upload, X, Camera, CheckCircle2, User } from "lucide-react";
+import { Loader2, X, Camera, User } from "lucide-react";
 import type { InstallationPhoto } from "@/lib/domain/types";
 
 interface PhotoItem {
@@ -41,7 +40,6 @@ interface PhotoItem {
 
 export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode }>) {
   const [open, setOpen] = useState(false);
-  const { user } = useAuth();
   const { data: items, isLoading: loadingItems } = useInventoryForIssues();
   const { data: workers } = useWorkersList();
   const createIssueMutation = useCreateIssue();
@@ -89,20 +87,8 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
     categoryNameLower === "tyres" ||
     categoryNameLower === "rims";
 
-  // Prefill the recipient with the logged-in user's name exactly once per
-  // open. Re-running on every change would rewrite the name the instant the
-  // field is cleared, making it impossible to type anyone else.
-  const prefilledRef = useRef(false);
-  useEffect(() => {
-    if (!open) {
-      prefilledRef.current = false;
-      return;
-    }
-    if (!prefilledRef.current && user?.name) {
-      prefilledRef.current = true;
-      setValue("workerName", user.name, { shouldValidate: true });
-    }
-  }, [open, user, setValue]);
+  // The recipient starts empty — items are usually issued to someone else, so
+  // defaulting to the signed-in admin only invited mis-recorded issues.
 
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -285,21 +271,28 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
               <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 id="workerName"
-                list="worker-suggestions"
                 placeholder="Type the name of who receives it"
                 className="h-10 pl-9"
                 autoComplete="off"
                 {...register("workerName")}
               />
-              <datalist id="worker-suggestions">
-                {activeWorkers.map((w) => (
-                  <option key={w.id} value={w.name} />
-                ))}
-              </datalist>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Pick a registered worker from the suggestions or type any name.
-            </p>
+            {activeWorkers.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 pt-0.5">
+                {activeWorkers.map((w) => (
+                  <button
+                    key={w.id}
+                    type="button"
+                    onClick={() =>
+                      setValue("workerName", w.name, { shouldValidate: true })
+                    }
+                    className="rounded-full border border-border px-2.5 py-0.5 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:bg-accent hover:text-foreground"
+                  >
+                    {w.name}
+                  </button>
+                ))}
+              </div>
+            )}
             {errors.workerName && (
               <p className="text-xs text-destructive">{errors.workerName.message}</p>
             )}
@@ -381,21 +374,32 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
                     </Label>
                     <Input
                       id="trailerChassisNumber"
-                      list="chassis-suggestions"
                       placeholder="e.g. CH-00001"
                       className="h-10 font-mono uppercase tracking-wider"
                       autoComplete="off"
                       {...register("trailerChassisNumber")}
                     />
-                    <datalist id="chassis-suggestions">
-                      {workshopTrailers?.map((t) => (
-                        <option key={t.id} value={t.chassisNumber}>
-                          {t.model
-                            ? `${t.model} — ${t.currentStageName}`
-                            : t.currentStageName}
-                        </option>
-                      ))}
-                    </datalist>
+                    {workshopTrailers && workshopTrailers.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-0.5">
+                        {workshopTrailers.map((t) => (
+                          <button
+                            key={t.id}
+                            type="button"
+                            onClick={() =>
+                              setValue(
+                                "trailerChassisNumber",
+                                t.chassisNumber,
+                                { shouldValidate: true },
+                              )
+                            }
+                            title={`${t.model ? `${t.model} — ` : ""}${t.currentStageName}`}
+                            className="rounded-full border border-border px-2.5 py-0.5 font-mono text-[11px] text-muted-foreground transition-colors hover:border-primary/40 hover:bg-accent hover:text-foreground"
+                          >
+                            {t.chassisNumber}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                     {errors.trailerChassisNumber && (
                       <p className="text-xs text-destructive">
                         {errors.trailerChassisNumber.message}
