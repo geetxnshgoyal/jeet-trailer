@@ -82,7 +82,7 @@ export function IssuesTable() {
           const target =
             vehicleNumber || trailerChassisNumber || chassisNumber;
           if (!target) {
-            return <span className="text-xs text-muted-foreground">—</span>;
+            return <span className="text-xs text-muted-foreground">-</span>;
           }
           return (
             <div className="space-y-0.5">

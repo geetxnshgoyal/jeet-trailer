@@ -44,16 +44,16 @@ export function ItemDetail({ id }: Readonly<{ id: string }>) {
 
   const fields: Array<{ label: string; value?: string | number }> = [
     { label: "Category", value: item.categoryName },
-    { label: "Brand", value: item.brand || "—" },
-    { label: "Model", value: item.model || "—" },
-    { label: "Size / spec", value: item.spec || "—" },
+    { label: "Brand", value: item.brand || "-" },
+    { label: "Model", value: item.model || "-" },
+    { label: "Size / spec", value: item.spec || "-" },
     // Only legacy/serial-tracked items carry a serial; hide the row otherwise.
     ...(item.serialNumber
       ? [{ label: "Serial number", value: item.serialNumber }]
       : []),
     { label: "Unit", value: item.unit },
     { label: "Low-stock threshold", value: item.lowStockThreshold },
-    { label: "Remarks", value: item.remarks || "—" },
+    { label: "Remarks", value: item.remarks || "-" },
   ];
 
   return (

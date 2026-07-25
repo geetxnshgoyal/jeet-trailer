@@ -45,7 +45,7 @@ export function WorkshopBoard() {
     workerId: scope === MINE ? "me" : undefined,
   });
 
-  // Active builds per current stage — the live "where is everything" strip.
+  // Active builds per current stage, the live "where is everything" strip.
   const stageCounts = useMemo(() => {
     const counts = new Map<string, number>();
     for (const t of trailers ?? []) {
@@ -217,7 +217,7 @@ function TrailerCard({
               ? `${trailer.currentWorkerName} is working on it`
               : trailer.currentWorkerName
                 ? `Waiting for ${trailer.currentWorkerName} to start`
-                : "Unassigned — waiting for pickup"}
+                : "Unassigned, waiting for pickup"}
           </p>
         </div>
       )}

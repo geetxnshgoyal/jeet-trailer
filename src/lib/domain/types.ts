@@ -180,7 +180,7 @@ export interface InstallationPhoto {
 }
 
 /**
- * The core issue/installation record. Never deleted — full audit trail.
+ * The core issue/installation record. Never deleted, full audit trail.
  *
  * `vehicleNumber` is stored flat now. A future Vehicle Management module can
  * introduce a `vehicles` collection and add an optional `vehicleId` here

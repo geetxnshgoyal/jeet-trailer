@@ -12,7 +12,7 @@ import type { AppUser, Role } from "@/lib/domain/types";
  * Flow: the client signs in with the Web SDK, obtains an ID token, and POSTs it
  * to /api/auth/session. We verify it and mint a long-lived HTTP-only session
  * cookie (see createSessionCookie). Every server request then reads that cookie
- * to resolve the current user — the ID token itself never lives in the browser
+ * to resolve the current user, the ID token itself never lives in the browser
  * beyond the initial exchange.
  */
 
@@ -74,7 +74,7 @@ export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
       active: data.active,
     };
   } catch {
-    // Expired, revoked, or malformed cookie — treat as signed out.
+    // Expired, revoked, or malformed cookie, treat as signed out.
     return null;
   }
 });

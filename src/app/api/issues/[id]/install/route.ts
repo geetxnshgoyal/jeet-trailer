@@ -6,7 +6,7 @@ import { getIssue, completeInstallation } from "@/lib/data/issues";
 import type { InstallationPhoto } from "@/lib/domain/types";
 
 /**
- * POST /api/issues/[id]/install — mark an issue installed.
+ * POST /api/issues/[id]/install: mark an issue installed.
  *
  * Photos are uploaded first via POST /api/issues/[id]/photos, which appends
  * them to the issue record. This endpoint then verifies at least one photo is

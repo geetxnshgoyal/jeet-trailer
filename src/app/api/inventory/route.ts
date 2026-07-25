@@ -7,7 +7,7 @@ import { getCategory } from "@/lib/data/categories";
 import type { InventoryItem } from "@/lib/domain/types";
 
 /**
- * GET /api/inventory — list items with optional ?category, ?status, ?search
+ * GET /api/inventory: list items with optional ?category, ?status, ?search
  * filters. Any authenticated user (admin or worker) may read inventory.
  */
 export const GET = handler(async (req: NextRequest) => {
@@ -24,7 +24,7 @@ export const GET = handler(async (req: NextRequest) => {
 });
 
 /**
- * POST /api/inventory — create an item (admin only).
+ * POST /api/inventory: create an item (admin only).
  * Bridges the API field names (size) to the domain shape (spec) and resolves
  * the category so the item stores its denormalized category name + serial rule.
  */

@@ -8,7 +8,7 @@ import { COLLECTIONS } from "@/lib/domain/constants";
 import type { AppUser } from "@/lib/domain/types";
 
 /**
- * POST /api/workshop/trailers/[id]/assign — assign or clear the worker on a
+ * POST /api/workshop/trailers/[id]/assign: assign or clear the worker on a
  * stage (admin only). An empty workerId clears the assignment.
  */
 export const POST = handler(

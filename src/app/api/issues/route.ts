@@ -8,7 +8,7 @@ import { COLLECTIONS } from "@/lib/domain/constants";
 import type { IssueRecord, AppUser } from "@/lib/domain/types";
 
 /**
- * GET /api/issues — list issue records (any authenticated user).
+ * GET /api/issues: list issue records (any authenticated user).
  */
 export const GET = handler(async (req: NextRequest) => {
   await requireUser();
@@ -26,7 +26,7 @@ export const GET = handler(async (req: NextRequest) => {
 });
 
 /**
- * POST /api/issues — issue an item (any authenticated user).
+ * POST /api/issues: issue an item (any authenticated user).
  *
  * Worker Defaults to session user if not explicitly specified.
  * Stock decrement + issue record + history are written in a single transaction.

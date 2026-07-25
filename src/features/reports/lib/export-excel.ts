@@ -1,5 +1,11 @@
 import ExcelJS from "exceljs";
+import { BUSINESS, addressLine, gstinLine } from "@/lib/domain/business";
 
+/**
+ * Export a report as a styled spreadsheet carrying the same letterhead as the
+ * PDF: registered name, address and GSTIN, then the report title and when it
+ * was generated. Header row is frozen so long reports stay readable.
+ */
 export async function exportToExcel(
   title: string,
   headers: string[],
@@ -7,23 +13,53 @@ export async function exportToExcel(
   fields: string[],
 ) {
   const workbook = new ExcelJS.Workbook();
+  workbook.creator = BUSINESS.legalName;
+  workbook.created = new Date();
+
   const worksheet = workbook.addWorksheet(title.slice(0, 31));
+  worksheet.views = [{ showGridLines: false }];
 
-  // Style sheet
-  worksheet.views = [{ showGridLines: true }];
+  // ---- letterhead ----
+  const nameRow = worksheet.addRow([BUSINESS.legalName]);
+  nameRow.font = { name: "Arial", size: 14, bold: true, color: { argb: "FF0F172A" } };
 
-  // Title Row
-  const titleRow = worksheet.addRow(["JEET TRAILERS - " + title.toUpperCase()]);
-  titleRow.font = { name: "Arial", size: 14, bold: true };
-  worksheet.addRow([]); // empty spacing
+  const natureRow = worksheet.addRow([BUSINESS.nature]);
+  natureRow.font = { name: "Arial", size: 9, color: { argb: "FF6E7681" } };
 
-  // Headers Row
+  const addressRow = worksheet.addRow([addressLine()]);
+  addressRow.font = { name: "Arial", size: 9, color: { argb: "FF6E7681" } };
+
+  const gstRow = worksheet.addRow([gstinLine()]);
+  gstRow.font = { name: "Arial", size: 9, color: { argb: "FF6E7681" } };
+
+  worksheet.addRow([]);
+
+  const generated = new Date().toLocaleString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+  const reportRow = worksheet.addRow([
+    toTitleCase(title),
+    `Generated ${generated}`,
+    `${data.length} record${data.length === 1 ? "" : "s"}`,
+  ]);
+  reportRow.font = { name: "Arial", size: 10, bold: true, color: { argb: "FF0F172A" } };
+  reportRow.getCell(2).font = { name: "Arial", size: 9, color: { argb: "FF6E7681" } };
+  reportRow.getCell(3).font = { name: "Arial", size: 9, color: { argb: "FF6E7681" } };
+
+  worksheet.addRow([]);
+
+  // ---- table ----
   const headerRow = worksheet.addRow(headers);
   headerRow.eachCell((cell) => {
     cell.fill = {
       type: "pattern",
       pattern: "solid",
-      fgColor: { argb: "FFEAB308" }, // Amber primary color
+      fgColor: { argb: "FF0F172A" },
     };
     cell.font = {
       name: "Arial",
@@ -31,7 +67,7 @@ export async function exportToExcel(
       bold: true,
       color: { argb: "FFFFFFFF" },
     };
-    cell.alignment = { vertical: "middle", horizontal: "center" };
+    cell.alignment = { vertical: "middle", horizontal: "left" };
     cell.border = {
       top: { style: "thin" },
       left: { style: "thin" },
@@ -39,12 +75,16 @@ export async function exportToExcel(
       right: { style: "thin" },
     };
   });
+  // Keep the column headings visible when scrolling a long report.
+  worksheet.views = [
+    { state: "frozen", ySplit: headerRow.number, showGridLines: false },
+  ];
 
   // Data Rows
   data.forEach((row) => {
     const vals = fields.map((f) => {
       const val = row[f];
-      if (val === null || val === undefined) return "—";
+      if (val === null || val === undefined) return "-";
       return val;
     });
     const addedRow = worksheet.addRow(vals);
@@ -84,4 +124,8 @@ export async function exportToExcel(
   anchor.click();
   window.URL.revokeObjectURL(url);
   document.body.removeChild(anchor);
+}
+
+function toTitleCase(value: string): string {
+  return value.replace(/\b\w/g, (c) => c.toUpperCase());
 }

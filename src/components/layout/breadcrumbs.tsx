@@ -45,7 +45,7 @@ export function Breadcrumbs() {
         {segments.map((segment, index) => {
           const href = "/" + segments.slice(0, index + 1).join("/");
           const isLast = index === segments.length - 1;
-          // Heuristic: long, non-label segments are ids — render as plain text.
+          // Heuristic: long, non-label segments are ids, render as plain text.
           const looksLikeId =
             !SEGMENT_LABELS[segment] && segment.length > 16;
 

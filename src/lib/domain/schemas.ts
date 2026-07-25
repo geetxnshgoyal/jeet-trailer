@@ -92,7 +92,7 @@ export const stockAdjustSchema = z.object({
     .int()
     .refine((n) => n !== 0, "Adjustment cannot be zero"),
   reason: trimmed(2, 200, "Reason"),
-  /** Supplier/party the stock came from — free text, recorded in history. */
+  /** Supplier/party the stock came from, free text, recorded in history. */
   partyName: z.string().trim().max(120).optional().or(z.literal("")),
   billNumber: z.string().trim().max(80).optional().or(z.literal("")),
 });

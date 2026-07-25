@@ -13,7 +13,7 @@ export default async function WorkshopPage() {
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Workshop</h1>
         <p className="text-sm text-muted-foreground">
-          Track every chassis as it moves through the production line — who has
+          Track every chassis as it moves through the production line: who has
           it, what stage it&apos;s at, and what&apos;s done.
         </p>
       </div>

@@ -262,7 +262,7 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
                         <div className="flex items-center justify-between gap-2">
                           <span className="font-medium">{it.name}</span>
                           <span className="text-xs text-muted-foreground">
-                            [{it.categoryName}] — {it.quantity} {it.unit}
+                            [{it.categoryName}] · {it.quantity} {it.unit}
                           </span>
                         </div>
                       </SelectItem>
@@ -276,7 +276,7 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
             )}
           </div>
 
-          {/* 2. Issued To — typeable, with registered workers as suggestions */}
+          {/* 2. Issued To, typeable, with registered workers as suggestions */}
           <div className="space-y-1.5">
             <Label htmlFor="workerName" className="font-medium">
               Issued To <span className="text-destructive">*</span>
@@ -391,7 +391,7 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
                       {workshopTrailers?.map((t) => (
                         <option key={t.id} value={t.chassisNumber}>
                           {t.model
-                            ? `${t.model} — ${t.currentStageName}`
+                            ? `${t.model} · ${t.currentStageName}`
                             : t.currentStageName}
                         </option>
                       ))}

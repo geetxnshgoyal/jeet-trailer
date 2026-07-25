@@ -4,7 +4,7 @@ import { ok, handler, DomainError } from "@/lib/api/response";
 import { getTrailer, listTrailerHistory } from "@/lib/data/trailers";
 
 /**
- * GET /api/workshop/trailers/[id] — trailer detail plus its audit history
+ * GET /api/workshop/trailers/[id]: trailer detail plus its audit history
  * (any authenticated user; the whole floor can see where every chassis is).
  */
 export const GET = handler(

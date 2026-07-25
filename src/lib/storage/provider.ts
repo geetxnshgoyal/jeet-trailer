@@ -3,7 +3,7 @@ import "server-only";
 /**
  * Provider-agnostic storage interface. The app depends only on this contract;
  * swapping Firebase Storage for S3 or Cloudinary later means adding a new
- * implementation and changing one factory line — no call-site changes.
+ * implementation and changing one factory line, no call-site changes.
  */
 
 export interface UploadInput {

@@ -7,7 +7,7 @@ import { COLLECTIONS } from "@/lib/domain/constants";
 import type { IssueRecord, InstallationPhoto } from "@/lib/domain/types";
 
 /**
- * POST /api/issues/[id]/photos — upload one or more installation photos for an
+ * POST /api/issues/[id]/photos: upload one or more installation photos for an
  * issue. Multipart form data with one or more `files` parts.
  *
  * Photos are uploaded through the storage abstraction (Firebase Storage today,

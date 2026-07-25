@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 /**
  * Edge proxy (Next 16's renamed middleware) for coarse route protection.
  *
- * This performs a *presence* check on the session cookie only — it does NOT
+ * This performs a *presence* check on the session cookie only, it does NOT
  * verify the cookie (the Firebase Admin SDK isn't available on the Edge
  * runtime). Authoritative verification happens in server components/route
  * handlers via getCurrentUser(). The goal here is purely to bounce obviously

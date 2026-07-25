@@ -10,7 +10,7 @@ import type { AppUser } from "@/lib/domain/types";
 const bodySchema = z.object({ idToken: z.string().min(1) });
 
 /**
- * POST /api/auth/session — exchange a freshly-issued ID token for an HTTP-only
+ * POST /api/auth/session: exchange a freshly-issued ID token for an HTTP-only
  * session cookie. Rejects disabled accounts and users without a mirrored
  * `users` doc (i.e. not provisioned by an admin).
  */
@@ -60,7 +60,7 @@ export const POST = handler(async (req: NextRequest) => {
   });
 });
 
-/** DELETE /api/auth/session — sign out by clearing the cookie. */
+/** DELETE /api/auth/session: sign out by clearing the cookie. */
 export const DELETE = handler(async () => {
   const store = await cookies();
   store.delete(sessionCookieName());

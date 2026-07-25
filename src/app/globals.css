@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /*
- * Jeet Trailers — industrial dashboard theme.
+ * Jeet Trailers, industrial dashboard theme.
  * Dark sidebar, light content area, amber/steel accent palette.
  * Tokens are HSL channel triples so opacity modifiers work (e.g. bg-primary/50).
  */
@@ -20,7 +20,7 @@
   --color-popover: hsl(0 0% 100%);
   --color-popover-foreground: hsl(222 47% 11%);
 
-  /* Amber — the workshop accent, used for primary actions. */
+  /* Amber, the workshop accent, used for primary actions. */
   --color-primary: hsl(28 92% 52%);
   --color-primary-foreground: hsl(0 0% 100%);
 

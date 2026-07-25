@@ -11,7 +11,7 @@ export function StageProgress({ stages }: { stages: TrailerStage[] }) {
       {stages.map((stage) => (
         <span
           key={stage.index}
-          title={`${stage.name} — ${stage.status.replace("_", " ")}`}
+          title={`${stage.name}: ${stage.status.replace("_", " ")}`}
           className={cn(
             "h-1.5 flex-1 rounded-full transition-colors",
             stage.status === "completed" && "bg-emerald-500",

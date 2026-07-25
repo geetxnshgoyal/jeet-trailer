@@ -4,7 +4,7 @@ import { ok, handler } from "@/lib/api/response";
 import { getItemHistory } from "@/lib/data/inventory";
 
 /**
- * GET /api/inventory/[id]/history — full, chronologically-descending audit
+ * GET /api/inventory/[id]/history: full, chronologically-descending audit
  * trail for an item (added, stock changes, issued, installed, edits).
  * Any authenticated user may read history.
  */

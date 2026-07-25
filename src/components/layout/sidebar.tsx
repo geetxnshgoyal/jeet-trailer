@@ -7,6 +7,7 @@ import { Truck, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { navItemsForRole } from "./nav-config";
+import { BUSINESS } from "@/lib/domain/business";
 import type { Role } from "@/lib/domain/types";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -95,9 +96,9 @@ export function SidebarNav({
           <Truck className="size-5" />
         </span>
         <div className="leading-tight">
-          <p className="text-sm font-semibold text-white">Jeet Trailers</p>
+          <p className="text-sm font-semibold text-white">{BUSINESS.name}</p>
           <p className="text-[11px] text-sidebar-foreground/60">
-            Workshop System
+            {BUSINESS.nature}
           </p>
         </div>
       </div>
@@ -137,9 +138,14 @@ export function SidebarNav({
             Install App
           </button>
         )}
-        <p className="text-[11px] text-sidebar-foreground/50 px-1">
-          v1.0 · Internal use only
-        </p>
+        <div className="space-y-0.5 px-1">
+          <p className="font-mono text-[10px] text-sidebar-foreground/50">
+            {BUSINESS.gstin}
+          </p>
+          <p className="text-[10px] text-sidebar-foreground/40">
+            {BUSINESS.address.city}, {BUSINESS.address.state}
+          </p>
+        </div>
       </div>
     </div>
   );

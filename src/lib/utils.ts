@@ -31,7 +31,7 @@ export function initials(name: string): string {
 /** Format an ISO timestamp as a readable date, e.g. "16 Jul 2026". */
 export function formatDate(iso: string): string {
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
+  if (Number.isNaN(d.getTime())) return "-";
   return d.toLocaleDateString("en-IN", {
     day: "2-digit",
     month: "short",
@@ -42,7 +42,7 @@ export function formatDate(iso: string): string {
 /** Format an ISO timestamp as date + time, e.g. "16 Jul 2026, 3:42 PM". */
 export function formatDateTime(iso: string): string {
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
+  if (Number.isNaN(d.getTime())) return "-";
   return d.toLocaleString("en-IN", {
     day: "2-digit",
     month: "short",
@@ -56,7 +56,7 @@ export function formatDateTime(iso: string): string {
 /** Format an ISO timestamp as time only, e.g. "3:42 PM". */
 export function formatTime(iso: string): string {
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
+  if (Number.isNaN(d.getTime())) return "-";
   return d.toLocaleTimeString("en-IN", {
     hour: "numeric",
     minute: "2-digit",

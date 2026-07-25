@@ -42,7 +42,7 @@ export function WorkersTable() {
       {
         accessorKey: "phone",
         header: "Phone",
-        cell: ({ row }) => row.original.phone || <span className="text-muted-foreground">—</span>,
+        cell: ({ row }) => row.original.phone || <span className="text-muted-foreground">-</span>,
       },
       {
         accessorKey: "role",

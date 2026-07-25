@@ -5,7 +5,7 @@ import { updateItemSchema } from "@/lib/domain/schemas";
 import { getItem, updateItem, deleteItem } from "@/lib/data/inventory";
 
 /**
- * GET /api/inventory/[id] — fetch a single item (any authenticated user).
+ * GET /api/inventory/[id]: fetch a single item (any authenticated user).
  */
 export const GET = handler(
   async (_req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
@@ -18,7 +18,7 @@ export const GET = handler(
 );
 
 /**
- * PATCH /api/inventory/[id] — edit item metadata (admin only). Quantity is not
+ * PATCH /api/inventory/[id]: edit item metadata (admin only). Quantity is not
  * editable here; it changes only through the audited stock-adjust endpoint.
  */
 export const PATCH = handler(
@@ -47,7 +47,7 @@ export const PATCH = handler(
 );
 
 /**
- * DELETE /api/inventory/[id] — remove an item (admin only). Blocked by the data
+ * DELETE /api/inventory/[id]: remove an item (admin only). Blocked by the data
  * layer if the item has any issue history, protecting the audit trail.
  */
 export const DELETE = handler(

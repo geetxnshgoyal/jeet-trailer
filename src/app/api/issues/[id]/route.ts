@@ -4,7 +4,7 @@ import { ok, handler, DomainError } from "@/lib/api/response";
 import { getIssue } from "@/lib/data/issues";
 
 /**
- * GET /api/issues/[id] — fetch a single issue record.
+ * GET /api/issues/[id]: fetch a single issue record.
  * Workers are restricted to viewing only their own issues.
  */
 export const GET = handler(

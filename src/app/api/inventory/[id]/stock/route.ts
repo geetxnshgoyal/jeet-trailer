@@ -5,7 +5,7 @@ import { stockAdjustSchema } from "@/lib/domain/schemas";
 import { adjustStock } from "@/lib/data/inventory";
 
 /**
- * POST /api/inventory/[id]/stock — apply a signed stock adjustment (admin only).
+ * POST /api/inventory/[id]/stock: apply a signed stock adjustment (admin only).
  * Positive delta = restock, negative = manual correction. The data layer runs
  * this in a transaction, refuses to drive stock negative, and appends a history
  * event carrying the supplied reason.

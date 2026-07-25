@@ -4,7 +4,7 @@ import { requireUser } from "@/lib/auth/session";
 export const dynamic = "force-dynamic";
 
 /**
- * Single trailer build route — stage timeline, actions, and history.
+ * Single trailer build route, stage timeline, actions, and history.
  */
 export default async function TrailerDetailPage({
   params,

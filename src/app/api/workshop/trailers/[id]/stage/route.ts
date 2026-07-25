@@ -8,10 +8,10 @@ import {
 } from "@/lib/data/trailers";
 
 /**
- * POST /api/workshop/trailers/[id]/stage — act on the trailer's current stage.
+ * POST /api/workshop/trailers/[id]/stage: act on the trailer's current stage.
  *
- * `{ action: "start" }` — the worker picks up the chassis (claims the stage if
- * unassigned). `{ action: "complete", notes? }` — marks the stage done and
+ * `{ action: "start" }`, the worker picks up the chassis (claims the stage if
+ * unassigned). `{ action: "complete", notes? }`, marks the stage done and
  * hands the chassis to the next stage (or finishes the trailer). Per-actor
  * permission rules are enforced inside the data layer's transaction.
  */

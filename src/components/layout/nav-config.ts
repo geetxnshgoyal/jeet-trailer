@@ -12,7 +12,7 @@ import type { Role } from "@/lib/domain/types";
 
 /**
  * Sidebar navigation, filtered by role. Workers see a reduced set (no user
- * management, categories, or reports — matching their permission scope).
+ * management, categories, or reports, matching their permission scope).
  */
 export interface NavItem {
   label: string;

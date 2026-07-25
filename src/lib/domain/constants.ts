@@ -2,7 +2,7 @@ import type { StockStatus, TrailerStatus, TrailerStageStatus } from "./types";
 
 /**
  * The seven default inventory categories Jeet Trailers ships with.
- * All ship untracked — stock is kept by quantity, with model and size
+ * All ship untracked, stock is kept by quantity, with model and size
  * identifying a line. Custom categories may still opt into serial tracking.
  */
 export const DEFAULT_CATEGORIES: ReadonlyArray<{
@@ -94,7 +94,7 @@ export const CHASSIS_CODE_PREFIX = "CH";
 
 /**
  * Default production pipeline a new trailer is pre-filled with, in order.
- * Admins can rename, add, or remove stages per trailer at creation — this is
+ * Admins can rename, add, or remove stages per trailer at creation, this is
  * only the starting template, so changing it never affects builds in flight.
  */
 export const DEFAULT_WORKSHOP_STAGES: ReadonlyArray<string> = [

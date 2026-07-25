@@ -28,7 +28,7 @@ import type {
  *
  * Completing the final stage marks the whole trailer `completed`. Every
  * transition also appends an immutable event to the trailer's `history`
- * subcollection — that feed is the audit trail the admin timeline renders.
+ * subcollection, that feed is the audit trail the admin timeline renders.
  */
 
 function trailersCol() {
@@ -236,14 +236,14 @@ export async function completeCurrentStage(
     let completedNote = `${updated.workerName} completed ${stage.name} on ${trailer.chassisNumber}`;
     if (next) {
       completedNote += next.workerName
-        ? ` — handed over to ${next.workerName} (${next.name})`
-        : ` — handed over to ${next.name}`;
+        ? `, handed over to ${next.workerName} (${next.name})`
+        : `, handed over to ${next.name}`;
     }
     const events: EventSeed[] = [{ type: "stage_completed", note: completedNote }];
     if (isLast) {
       events.push({
         type: "completed",
-        note: `Trailer ${trailer.chassisNumber} finished all stages — ready for inventory`,
+        note: `Trailer ${trailer.chassisNumber} finished all stages, ready for inventory`,
       });
     }
 
@@ -286,10 +286,10 @@ export async function assignStageWorker(
         ? { workerId: worker.id, workerName: worker.name }
         : { workerId: undefined, workerName: undefined }),
     };
-    // Firestore rejects `undefined` fields — strip them.
+    // Firestore rejects `undefined` fields, strip them.
     stages[stageIndex] = stripUndefined(stages[stageIndex]);
 
-    // `undefined` here means "clear the field" — toUpdatePayload turns it
+    // `undefined` here means "clear the field", toUpdatePayload turns it
     // into FieldValue.delete() so a cleared assignment doesn't linger.
     const patch: Partial<TrailerRecord> = { stages, updatedAt: now };
     if (stageIndex === trailer.currentStageIndex) {

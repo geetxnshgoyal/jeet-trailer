@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { LoginForm } from "@/features/auth/components/login-form";
+import { BUSINESS, addressLine, gstinLine } from "@/lib/domain/business";
 import { Truck } from "lucide-react";
 
 /**
@@ -12,31 +13,33 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ next?: string }>;
 }) {
-  try {
-    const user = await getCurrentUser();
-    if (user) redirect("/dashboard");
+  // No try/catch here on purpose: redirect() signals by throwing, so catching
+  // would swallow it and render an error page instead of sending a signed-in
+  // user to the dashboard. getCurrentUser already returns null on failure.
+  const user = await getCurrentUser();
+  if (user) redirect("/dashboard");
 
-    const { next } = await searchParams;
+  const { next } = await searchParams;
 
-    return (
-      <div className="grid min-h-dvh lg:grid-cols-2">
-      {/* Brand panel — hidden on small screens. */}
+  return (
+    <div className="grid min-h-dvh lg:grid-cols-2">
+      {/* Brand panel, hidden on small screens. */}
       <div className="relative hidden flex-col justify-between bg-sidebar p-12 text-sidebar-foreground lg:flex">
         <div className="flex items-center gap-3">
           <div className="flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             <Truck className="size-6" />
           </div>
           <div>
-            <p className="text-lg font-semibold text-white">Jeet Trailers</p>
+            <p className="text-lg font-semibold text-white">{BUSINESS.name}</p>
             <p className="text-sm text-sidebar-foreground/70">
-              Workshop Inventory System
+              {BUSINESS.nature}
             </p>
           </div>
         </div>
 
         <div className="space-y-4">
           <h1 className="text-3xl font-semibold leading-tight text-white">
-            Every rim, tyre, and weld —<br />
+            Every rim, tyre, and weld,<br />
             tracked from stock to install.
           </h1>
           <p className="max-w-md text-sidebar-foreground/70">
@@ -45,9 +48,13 @@ export default async function LoginPage({
           </p>
         </div>
 
-        <p className="text-sm text-sidebar-foreground/50">
-          © {new Date().getFullYear()} Jeet Trailers. Internal use only.
-        </p>
+        <div className="space-y-1 text-sm text-sidebar-foreground/50">
+          <p>{addressLine()}</p>
+          <p className="font-mono text-xs">{gstinLine()}</p>
+          <p className="pt-2 text-xs">
+            © {new Date().getFullYear()} {BUSINESS.name}. All rights reserved.
+          </p>
+        </div>
       </div>
 
       {/* Form panel. */}
@@ -57,7 +64,8 @@ export default async function LoginPage({
             <div className="mb-3 flex size-11 items-center justify-center rounded-xl bg-primary text-primary-foreground">
               <Truck className="size-6" />
             </div>
-            <p className="text-lg font-semibold">Jeet Trailers</p>
+            <p className="text-lg font-semibold">{BUSINESS.name}</p>
+            <p className="text-sm text-muted-foreground">{BUSINESS.nature}</p>
           </div>
 
           <h2 className="text-2xl font-semibold tracking-tight">Sign in</h2>
@@ -72,12 +80,4 @@ export default async function LoginPage({
       </div>
     </div>
   );
-  } catch (err) {
-    return (
-      <div className="p-8 font-mono text-red-500 bg-red-50 min-h-screen">
-        <h1 className="text-xl font-bold mb-4">Error in LoginPage:</h1>
-        <pre className="whitespace-pre-wrap">{err instanceof Error ? err.stack : String(err)}</pre>
-      </div>
-    );
-  }
 }

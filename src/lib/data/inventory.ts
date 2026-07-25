@@ -24,7 +24,7 @@ import type {
  *
  * Every stock-changing operation is wrapped in a Firestore transaction that
  * (1) mutates the item quantity, (2) recomputes stock status, and (3) appends
- * an immutable event to the item's `history` subcollection — so the item is
+ * an immutable event to the item's `history` subcollection, so the item is
  * never out of sync with its audit trail. Issue-driven decrements live in the
  * issues layer (which also writes the issue record atomically), but they call
  * the same history-append shape defined here.
@@ -78,7 +78,7 @@ export async function createItem(
   const serialTracked = isSerialTracked(input.category);
 
   // Serial-tracked categories require a unique serial. Rim/Tyre are not
-  // serial-tracked — they are identified by model and size.
+  // serial-tracked, they are identified by model and size.
   if (serialTracked) {
     if (!input.serialNumber?.trim()) {
       throw new DomainError(
@@ -217,7 +217,7 @@ export interface UpdateItemInput {
 }
 
 /**
- * Edit item metadata (not quantity — that goes through adjustStock so every
+ * Edit item metadata (not quantity, that goes through adjustStock so every
  * quantity change is audited). Recomputes status if the threshold changes.
  */
 export async function updateItem(
@@ -324,7 +324,7 @@ export async function adjustStock(input: {
 }
 
 /**
- * Delete an item. Only permitted when the item has never been issued — issue
+ * Delete an item. Only permitted when the item has never been issued, issue
  * records are an immutable audit trail and must never dangle. Callers should
  * guard on that; here we also delete the item's history subcollection.
  */

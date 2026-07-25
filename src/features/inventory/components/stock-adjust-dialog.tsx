@@ -90,7 +90,7 @@ export function StockAdjustDialog({
         <DialogHeader>
           <DialogTitle>Adjust stock</DialogTitle>
           <DialogDescription>
-            {item.name} ({item.code}) — current stock {item.quantity} {item.unit}
+            {item.name} ({item.code}), current stock {item.quantity} {item.unit}
           </DialogDescription>
         </DialogHeader>
 

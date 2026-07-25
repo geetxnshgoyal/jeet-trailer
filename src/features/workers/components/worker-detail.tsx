@@ -209,7 +209,7 @@ export function WorkerDetail({ id }: { id: string }) {
               <Phone className="h-4 w-4 text-muted-foreground" />
               <div>
                 <span className="block text-xs text-muted-foreground">Phone</span>
-                <span>{worker.phone || "—"}</span>
+                <span>{worker.phone || "-"}</span>
               </div>
             </div>
 
