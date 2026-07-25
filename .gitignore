@@ -44,3 +44,6 @@ next-env.d.ts
 # Firebase service account key (never commit)
 *.json.enc
 jeet-trailers-firebase-adminsdk-*.json
+
+# Local Firestore backups: business data, never commit
+backups/
