@@ -166,17 +166,17 @@ function StageRow({
   isAdmin: boolean;
   myId?: string;
 }) {
-  const isCurrent =
-    trailer.status === "in_progress" &&
-    stage.index === trailer.currentStageIndex;
+  // Stages are independent: any pending stage can be started at any time, so
+  // painting need not wait on body fabrication.
   const canStart =
-    isCurrent &&
     stage.status === "pending" &&
     (isAdmin || !stage.workerId || stage.workerId === myId);
   const canComplete =
-    isCurrent &&
-    stage.status === "in_progress" &&
-    (isAdmin || stage.workerId === myId);
+    stage.status === "in_progress" && (isAdmin || stage.workerId === myId);
+  // Completing this finishes the build only if nothing else is outstanding.
+  const isFinalRemaining = trailer.stages.every(
+    (s) => s.index === stage.index || s.status === "completed",
+  );
 
   return (
     <li className="relative flex gap-4 pb-2">
@@ -247,7 +247,11 @@ function StageRow({
           )}
           {canStart && <StartButton trailerId={trailer.id} stage={stage} />}
           {canComplete && (
-            <CompleteDialog trailerId={trailer.id} stage={stage} isLast={isLast} />
+            <CompleteDialog
+              trailerId={trailer.id}
+              stage={stage}
+              isFinal={isFinalRemaining}
+            />
           )}
         </div>
       </div>
@@ -268,7 +272,7 @@ function StartButton({
       size="sm"
       onClick={() =>
         action.mutate(
-          { action: "start" },
+          { action: "start", stageIndex: stage.index },
           {
             onSuccess: () => toast.success(`Started ${stage.name}.`),
             onError: (err) =>
@@ -291,11 +295,11 @@ function StartButton({
 function CompleteDialog({
   trailerId,
   stage,
-  isLast,
+  isFinal,
 }: {
   trailerId: string;
   stage: TrailerStage;
-  isLast: boolean;
+  isFinal: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [notes, setNotes] = useState("");
@@ -303,13 +307,17 @@ function CompleteDialog({
 
   const submit = () => {
     action.mutate(
-      { action: "complete", notes: notes.trim() || undefined },
+      {
+        action: "complete",
+        stageIndex: stage.index,
+        notes: notes.trim() || undefined,
+      },
       {
         onSuccess: () => {
           toast.success(
-            isLast
+            isFinal
               ? "All stages complete. Trailer is ready!"
-              : `${stage.name} completed and handed over.`,
+              : `${stage.name} completed.`,
           );
           setOpen(false);
           setNotes("");
@@ -324,16 +332,16 @@ function CompleteDialog({
     <>
       <Button size="sm" variant="default" onClick={() => setOpen(true)}>
         <Check className="size-4" />
-        {isLast ? "Complete Build" : "Complete & Hand Over"}
+        {isFinal ? "Complete Build" : "Complete Stage"}
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Complete {stage.name}?</DialogTitle>
             <DialogDescription>
-              {isLast
-                ? "This is the final stage. The trailer will be marked complete and ready for inventory."
-                : "The chassis will be handed over to the next stage."}
+              {isFinal
+                ? "This is the last stage outstanding. The trailer will be marked complete and ready for inventory."
+                : "This stage will be marked done. Remaining stages are unaffected."}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-1.5">

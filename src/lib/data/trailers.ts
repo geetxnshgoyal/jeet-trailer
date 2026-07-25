@@ -19,16 +19,19 @@ import type {
 /**
  * Workshop trailer data-access.
  *
- * A trailer's pipeline is an embedded, ordered `stages` array; the chassis is
- * always "held" by exactly one stage (`currentStageIndex`). Stage transitions
- * run in a transaction against the live doc so two workers can never both
- * claim or complete the same stage:
+ * A trailer's pipeline is an embedded `stages` array. Stages are independent:
+ * any pending stage can be started at any time, so painting may begin before
+ * body fabrication finishes and levels can run in parallel. Each stage moves
+ * pending -> in_progress -> completed, and transitions run in a transaction
+ * against the live doc so two workers can never both claim the same stage.
  *
- *   pending ──start──▶ in_progress ──complete──▶ completed, advance pointer
+ * Because there is no single cursor to advance, `currentStageIndex` is derived
+ * after every transition (see deriveProgress): whatever is being worked on,
+ * else the first stage still waiting. The trailer is `completed` only once
+ * every stage is done, never merely because the last-indexed one finished.
  *
- * Completing the final stage marks the whole trailer `completed`. Every
- * transition also appends an immutable event to the trailer's `history`
- * subcollection, that feed is the audit trail the admin timeline renders.
+ * Every transition also appends an immutable event to the trailer's `history`
+ * subcollection, the audit trail the admin timeline renders.
  */
 
 function trailersCol() {
@@ -124,15 +127,17 @@ export async function createTrailer(
 }
 
 /**
- * Start the current stage. Admins can start any stage; a worker can start it
- * when it is assigned to them or unassigned (starting an unassigned stage
- * claims it). The actor becomes the stage's worker either way.
+ * Start a stage. Stages are independent, any pending stage can be started at
+ * any time, so painting can begin before body fabrication finishes and two
+ * levels can run in parallel. A worker can start a stage assigned to them or
+ * one that is unassigned (which claims it); admins can start any stage.
  */
-export async function startCurrentStage(
+export async function startStage(
   trailerId: string,
+  stageIndex: number | undefined,
   actor: Actor,
 ): Promise<TrailerRecord> {
-  return stageTransition(trailerId, actor, (trailer, stage) => {
+  return stageTransition(trailerId, stageIndex, actor, (trailer, stage) => {
     if (stage.status !== "pending") {
       throw new DomainError(
         "STAGE_NOT_PENDING",
@@ -167,10 +172,7 @@ export async function startCurrentStage(
     };
     return {
       stage: updated,
-      trailerPatch: {
-        currentWorkerId: worker.id,
-        currentWorkerName: worker.name,
-      },
+      trailerPatch: {},
       events: [
         {
           type: "stage_started",
@@ -182,16 +184,17 @@ export async function startCurrentStage(
 }
 
 /**
- * Complete the current stage and hand the chassis to the next one. Only the
- * worker on the stage (or an admin) may complete it. Completing the last
- * stage marks the whole trailer completed.
+ * Complete a stage. Only the worker on it (or an admin) may complete it.
+ * The trailer finishes once every stage is complete, not merely when the
+ * last one is, since stages can be worked out of order.
  */
-export async function completeCurrentStage(
+export async function completeStage(
   trailerId: string,
+  stageIndex: number | undefined,
   actor: Actor,
   notes?: string,
 ): Promise<TrailerRecord> {
-  return stageTransition(trailerId, actor, (trailer, stage) => {
+  return stageTransition(trailerId, stageIndex, actor, (trailer, stage) => {
     if (stage.status !== "in_progress") {
       throw new DomainError(
         "STAGE_NOT_STARTED",
@@ -215,39 +218,32 @@ export async function completeCurrentStage(
       ...(notes?.trim() ? { notes: notes.trim() } : {}),
     };
 
-    const isLast = stage.index >= trailer.stages.length - 1;
-    const next = isLast ? null : trailer.stages[stage.index + 1];
-
-    const trailerPatch: Partial<TrailerRecord> = isLast
-      ? {
-          status: "completed" as TrailerStatus,
-          completedAt: now,
-          currentStageName: updated.name,
-          currentWorkerId: updated.workerId,
-          currentWorkerName: updated.workerName,
-        }
-      : {
-          currentStageIndex: next!.index,
-          currentStageName: next!.name,
-          currentWorkerId: next!.workerId,
-          currentWorkerName: next!.workerName,
-        };
+    // What is left once this stage lands, the next thing awaiting work.
+    const remaining = trailer.stages.filter(
+      (s) => s.index !== stage.index && s.status !== "completed",
+    );
+    const next = remaining.find((s) => s.status === "in_progress") ?? remaining[0];
+    const allDone = remaining.length === 0;
 
     let completedNote = `${updated.workerName} completed ${stage.name} on ${trailer.chassisNumber}`;
     if (next) {
       completedNote += next.workerName
-        ? `, handed over to ${next.workerName} (${next.name})`
-        : `, handed over to ${next.name}`;
+        ? `, next up ${next.name} (${next.workerName})`
+        : `, next up ${next.name}`;
     }
-    const events: EventSeed[] = [{ type: "stage_completed", note: completedNote }];
-    if (isLast) {
+    const events: EventSeed[] = [
+      { type: "stage_completed", note: completedNote },
+    ];
+    if (allDone) {
       events.push({
         type: "completed",
         note: `Trailer ${trailer.chassisNumber} finished all stages, ready for inventory`,
       });
     }
 
-    return { stage: updated, trailerPatch, events };
+    // The progress pointer is recomputed from the whole pipeline in
+    // stageTransition, so nothing stage-order-specific is patched here.
+    return { stage: updated, trailerPatch: {}, events };
   });
 }
 
@@ -379,16 +375,44 @@ export async function listTrailerHistory(
 type EventSeed = { type: TrailerHistoryEvent["type"]; note: string };
 
 /**
+ * Recompute the "where is this build" pointer from the whole pipeline.
+ *
+ * With stages worked out of order there is no single cursor to advance, so
+ * `current` is whatever is actively being worked on, else the first thing
+ * still waiting. The trailer is done only when every stage is complete.
+ */
+function deriveProgress(
+  stages: TrailerStage[],
+  now: string,
+): Partial<TrailerRecord> {
+  const inProgress = stages.find((s) => s.status === "in_progress");
+  const pending = stages.find((s) => s.status === "pending");
+  const current = inProgress ?? pending ?? stages[stages.length - 1];
+  const allDone = stages.every((s) => s.status === "completed");
+
+  return {
+    currentStageIndex: current.index,
+    currentStageName: current.name,
+    currentWorkerId: current.workerId,
+    currentWorkerName: current.workerName,
+    status: allDone ? ("completed" as TrailerStatus) : ("in_progress" as TrailerStatus),
+    ...(allDone ? { completedAt: now } : {}),
+  };
+}
+
+/**
  * Shared transaction wrapper for start/complete: loads the trailer, applies
- * the caller's transition to the *current* stage, writes the patched doc and
- * appends the produced history events atomically.
+ * the caller's transition to the requested stage (defaulting to the current
+ * one), recomputes the progress pointer, writes the patched doc and appends
+ * the produced history events atomically.
  */
 async function stageTransition(
   trailerId: string,
+  stageIndex: number | undefined,
   actor: Actor,
   transition: (
     trailer: TrailerRecord,
-    currentStage: TrailerStage,
+    targetStage: TrailerStage,
   ) => {
     stage: TrailerStage;
     trailerPatch: Partial<TrailerRecord>;
@@ -411,14 +435,26 @@ async function stageTransition(
       );
     }
 
-    const current = trailer.stages[trailer.currentStageIndex];
-    const { stage, trailerPatch, events } = transition(trailer, current);
+    const target =
+      stageIndex === undefined
+        ? trailer.stages[trailer.currentStageIndex]
+        : trailer.stages[stageIndex];
+    if (!target) {
+      throw new DomainError("BAD_STAGE", "No such stage on this trailer", 422);
+    }
+
+    const { stage, trailerPatch, events } = transition(trailer, target);
 
     const now = nowIso();
     const stages = [...trailer.stages];
     stages[stage.index] = stripUndefined(stage);
 
-    const patch = { ...trailerPatch, stages, updatedAt: now };
+    const patch = {
+      ...deriveProgress(stages, now),
+      ...trailerPatch,
+      stages,
+      updatedAt: now,
+    };
 
     tx.update(ref, toUpdatePayload(patch));
     for (const seed of events) {

@@ -68,7 +68,11 @@ export function useCreateTrailer() {
 export function useTrailerStageAction(id: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { action: "start" | "complete"; notes?: string }) =>
+    mutationFn: (body: {
+      action: "start" | "complete";
+      stageIndex?: number;
+      notes?: string;
+    }) =>
       api.post<{ trailer: TrailerRecord }>(
         `/api/workshop/trailers/${id}/stage`,
         body,
