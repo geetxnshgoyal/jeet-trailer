@@ -43,9 +43,11 @@ export interface CreateIssueInput {
   itemId: string;
   quantity: number;
   vehicleNumber?: string;
-  /** In-production trailer chassis the item goes onto (alternative to vehicle). */
+  /** Chassis number stamped on the vehicle. */
   chassisNumber?: string;
-  /** Linked workshop trailer doc, when the chassis matched one. */
+  /** Workshop build the item goes onto, e.g. CH-00001. */
+  trailerChassisNumber?: string;
+  /** Linked workshop trailer doc, when the trailer chassis matched one. */
   trailerId?: string;
   serialNumber?: string;
   notes?: string;
@@ -102,8 +104,16 @@ export async function createIssue(
       input.status || (hasPhotos ? "installed" : "issued");
     const vehicleNo = input.vehicleNumber?.trim() || "";
     const chassisNo = input.chassisNumber?.trim().toUpperCase() || "";
-    /** Display target for notes: registered vehicle or workshop chassis. */
-    const target = vehicleNo || (chassisNo ? `chassis ${chassisNo}` : "");
+    const trailerChassisNo =
+      input.trailerChassisNumber?.trim().toUpperCase() || "";
+    /** Where the item went, for the history note. */
+    const target = vehicleNo
+      ? `vehicle ${vehicleNo}`
+      : trailerChassisNo
+        ? `trailer ${trailerChassisNo}`
+        : chassisNo
+          ? `chassis ${chassisNo}`
+          : "";
 
     const record: IssueRecord = {
       id: issueRef.id,
@@ -126,6 +136,7 @@ export async function createIssue(
       updatedAt: now,
       ...(serialNumber ? { serialNumber } : {}),
       ...(chassisNo ? { chassisNumber: chassisNo } : {}),
+      ...(trailerChassisNo ? { trailerChassisNumber: trailerChassisNo } : {}),
       ...(input.trailerId ? { trailerId: input.trailerId } : {}),
       ...(input.notes?.trim() ? { notes: input.notes.trim() } : {}),
     };
@@ -141,7 +152,7 @@ export async function createIssue(
       actorName: input.actorName,
       createdAt: now,
       note: target
-        ? `Issued ${input.quantity} ${item.unit} to ${input.workerName} for ${vehicleNo ? `vehicle ${vehicleNo}` : target}`
+        ? `Issued ${input.quantity} ${item.unit} to ${input.workerName} for ${target}`
         : `Issued ${input.quantity} ${item.unit} to ${input.workerName}`,
     };
 
@@ -211,9 +222,11 @@ export async function completeInstallation(
       createdAt: now,
       note: issue.vehicleNumber
         ? `Installed on vehicle ${issue.vehicleNumber}`
-        : issue.chassisNumber
-          ? `Installed on chassis ${issue.chassisNumber}`
-          : "Installed",
+        : issue.trailerChassisNumber
+          ? `Installed on trailer ${issue.trailerChassisNumber}`
+          : issue.chassisNumber
+            ? `Installed on chassis ${issue.chassisNumber}`
+            : "Installed",
     };
 
     tx.update(issueRef, {
@@ -257,8 +270,14 @@ export async function listIssues(
     issues = issues.filter((it) => it.status === filter.status);
   }
   if (filter.vehicleNumber) {
+    // Matches registration, vehicle chassis, or workshop trailer chassis, so
+    // one box finds an issue by whichever number the user has to hand.
     const vn = filter.vehicleNumber.toUpperCase();
-    issues = issues.filter((it) => it.vehicleNumber === vn);
+    issues = issues.filter((it) =>
+      [it.vehicleNumber, it.chassisNumber, it.trailerChassisNumber]
+        .filter(Boolean)
+        .some((f) => f!.toUpperCase().includes(vn)),
+    );
   }
   if (filter.limit) {
     issues = issues.slice(0, filter.limit);
@@ -267,7 +286,16 @@ export async function listIssues(
   if (filter.search?.trim()) {
     const needle = filter.search.trim().toLowerCase();
     issues = issues.filter((it) =>
-      [it.code, it.itemName, it.itemCode, it.workerName, it.vehicleNumber, it.chassisNumber, it.serialNumber]
+      [
+        it.code,
+        it.itemName,
+        it.itemCode,
+        it.workerName,
+        it.vehicleNumber,
+        it.chassisNumber,
+        it.trailerChassisNumber,
+        it.serialNumber,
+      ]
         .filter(Boolean)
         .some((f) => f!.toLowerCase().includes(needle)),
     );

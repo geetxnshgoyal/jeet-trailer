@@ -126,7 +126,7 @@ export function GlobalSearch() {
                         >
                           <span className="font-semibold text-foreground">{item.name}</span>
                           <span className="text-xs text-muted-foreground font-mono mt-0.5">
-                            {item.code} {item.brand ? ` · ${item.brand}` : ""} {item.serialNumber ? ` · Serial: ${item.serialNumber}` : ""}
+                            {item.code} {item.brand ? ` · ${item.brand}` : ""} {item.model ? ` · ${item.model}` : ""}
                           </span>
                         </button>
                       ))}
@@ -149,7 +149,12 @@ export function GlobalSearch() {
                             {issue.itemName} (Qty: {issue.quantity})
                           </span>
                           <span className="text-xs text-muted-foreground font-mono mt-0.5">
-                            {issue.code} · Vehicle: {issue.vehicleNumber} · Worker: {issue.workerName}
+                            {issue.code} ·{" "}
+                            {issue.vehicleNumber ||
+                              issue.trailerChassisNumber ||
+                              issue.chassisNumber ||
+                              "—"}{" "}
+                            · Issued to: {issue.workerName}
                           </span>
                         </button>
                       ))}

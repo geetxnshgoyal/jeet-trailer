@@ -61,14 +61,15 @@ export const POST = handler(async (req: NextRequest) => {
     targetWorkerName = typedName;
   }
 
-  // A chassis install links to the workshop trailer when the number matches
-  // one; unmatched chassis numbers are still recorded as plain text.
-  const chassisNumber = input.chassisNumber?.trim().toUpperCase() || "";
+  // Link the workshop trailer when its chassis matches a build; unmatched
+  // numbers are still recorded as plain text.
+  const trailerChassisNumber =
+    input.trailerChassisNumber?.trim().toUpperCase() || "";
   let trailerId: string | undefined;
-  if (chassisNumber) {
+  if (trailerChassisNumber) {
     const trailerSnap = await adminDb()
       .collection(COLLECTIONS.trailers)
-      .where("chassisNumber", "==", chassisNumber)
+      .where("chassisNumber", "==", trailerChassisNumber)
       .limit(1)
       .get();
     trailerId = trailerSnap.empty ? undefined : trailerSnap.docs[0].id;
@@ -78,7 +79,8 @@ export const POST = handler(async (req: NextRequest) => {
     itemId: input.itemId,
     quantity: input.quantity,
     vehicleNumber: input.vehicleNumber || "",
-    chassisNumber: chassisNumber || undefined,
+    chassisNumber: input.chassisNumber || undefined,
+    trailerChassisNumber: trailerChassisNumber || undefined,
     trailerId,
     serialNumber: input.serialNumber || undefined,
     notes: input.notes || undefined,

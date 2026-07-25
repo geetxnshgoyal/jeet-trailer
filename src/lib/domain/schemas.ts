@@ -100,7 +100,16 @@ export type StockAdjustInput = z.infer<typeof stockAdjustSchema>;
 
 // ── Workshop / production line ────────────────────────────────────────────────
 
-/** Chassis number, e.g. CH-00042 or a custom shop code. */
+/** Chassis number stamped on a vehicle (VIN-like), e.g. MAT448099L1B12345. */
+export const vehicleChassisSchema = z
+  .string()
+  .trim()
+  .toUpperCase()
+  .min(3, "Chassis number is too short")
+  .max(32, "Chassis number is too long")
+  .regex(/^[A-Z0-9-]+$/, "Chassis number can use letters, digits and dashes");
+
+/** Workshop trailer chassis, e.g. CH-00042 or a custom shop code. */
 export const chassisNumberSchema = z
   .string()
   .trim()
@@ -150,8 +159,10 @@ export const createIssueSchema = z.object({
   workerName: z.string().trim().max(80).optional().or(z.literal("")),
   quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
   vehicleNumber: vehicleNumberSchema.optional().or(z.literal("")),
-  /** For installs on an in-production trailer instead of a registered vehicle. */
-  chassisNumber: chassisNumberSchema.optional().or(z.literal("")),
+  /** Chassis number stamped on the vehicle. */
+  chassisNumber: vehicleChassisSchema.optional().or(z.literal("")),
+  /** Workshop build the item goes onto, e.g. CH-00001. */
+  trailerChassisNumber: chassisNumberSchema.optional().or(z.literal("")),
   serialNumber: z.string().trim().max(120).optional().or(z.literal("")),
   status: z.enum(["issued", "installed", "cancelled"]).optional(),
   photos: z

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -48,10 +48,6 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
 
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
   const [photoError, setPhotoError] = useState<string | null>(null);
-  /** Install target: a registered vehicle or an in-production trailer chassis. */
-  const [installTarget, setInstallTarget] = useState<"vehicle" | "chassis">(
-    "vehicle",
-  );
   const { data: workshopTrailers } = useTrailers({ status: "in_progress" });
 
   const activeWorkers = workers?.filter((w) => w.active !== false) || [];
@@ -73,6 +69,7 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
       quantity: 1,
       vehicleNumber: "",
       chassisNumber: "",
+      trailerChassisNumber: "",
       serialNumber: "",
       status: "installed",
       notes: "",
@@ -80,7 +77,6 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
   });
 
   const selectedItemId = watch("itemId");
-  const typedWorkerName = watch("workerName");
   const selectedStatus = watch("status");
 
   const selectedItem = items?.find((it) => it.id === selectedItemId);
@@ -93,12 +89,20 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
     categoryNameLower === "tyres" ||
     categoryNameLower === "rims";
 
-  // Default the recipient to the logged-in user's name when the modal opens
+  // Prefill the recipient with the logged-in user's name exactly once per
+  // open. Re-running on every change would rewrite the name the instant the
+  // field is cleared, making it impossible to type anyone else.
+  const prefilledRef = useRef(false);
   useEffect(() => {
-    if (open && user?.name && !typedWorkerName) {
+    if (!open) {
+      prefilledRef.current = false;
+      return;
+    }
+    if (!prefilledRef.current && user?.name) {
+      prefilledRef.current = true;
       setValue("workerName", user.name, { shouldValidate: true });
     }
-  }, [open, user, typedWorkerName, setValue]);
+  }, [open, user, setValue]);
 
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -138,7 +142,6 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
       reset();
       setPhotos([]);
       setPhotoError(null);
-      setInstallTarget("vehicle");
     }
   };
 
@@ -154,19 +157,22 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
       (w) => w.name.trim().toLowerCase() === recipientName.toLowerCase(),
     );
 
+    // Tyre/Rim installs must be fully traceable: registration, vehicle
+    // chassis, and the workshop build are all required.
     if (requiresInstallation) {
-      if (
-        installTarget === "vehicle" &&
-        (!data.vehicleNumber || data.vehicleNumber.trim().length < 4)
-      ) {
+      if (!data.vehicleNumber || data.vehicleNumber.trim().length < 4) {
         toast.error("Vehicle number is required for installation tracking.");
         return;
       }
-      if (
-        installTarget === "chassis" &&
-        (!data.chassisNumber || data.chassisNumber.trim().length < 3)
-      ) {
+      if (!data.chassisNumber || data.chassisNumber.trim().length < 3) {
         toast.error("Chassis number is required for installation tracking.");
+        return;
+      }
+      if (
+        !data.trailerChassisNumber ||
+        data.trailerChassisNumber.trim().length < 3
+      ) {
+        toast.error("Trailer chassis is required for installation tracking.");
         return;
       }
     }
@@ -186,14 +192,10 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
       serialNumber: selectedItem?.serialNumber || data.serialNumber || undefined,
       ...(requiresInstallation
         ? {
-            vehicleNumber:
-              installTarget === "vehicle"
-                ? data.vehicleNumber?.trim().toUpperCase()
-                : "",
-            chassisNumber:
-              installTarget === "chassis"
-                ? data.chassisNumber?.trim().toUpperCase()
-                : "",
+            vehicleNumber: data.vehicleNumber?.trim().toUpperCase(),
+            chassisNumber: data.chassisNumber?.trim().toUpperCase(),
+            trailerChassisNumber:
+              data.trailerChassisNumber?.trim().toUpperCase(),
             status: (data.status as "installed" | "issued") || "installed",
             photos: photoObjects,
           }
@@ -334,69 +336,70 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
                   </div>
 
                   <div className="space-y-1.5">
-                    <div className="flex items-center gap-1 rounded-lg bg-muted/60 p-0.5 w-fit">
-                      <button
-                        type="button"
-                        onClick={() => setInstallTarget("vehicle")}
-                        className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-                          installTarget === "vehicle"
-                            ? "bg-background text-foreground shadow-sm"
-                            : "text-muted-foreground"
-                        }`}
-                      >
-                        Vehicle No.
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setInstallTarget("chassis")}
-                        className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-                          installTarget === "chassis"
-                            ? "bg-background text-foreground shadow-sm"
-                            : "text-muted-foreground"
-                        }`}
-                      >
-                        Trailer Chassis
-                      </button>
-                    </div>
-                    {installTarget === "vehicle" ? (
-                      <>
-                        <Input
-                          id="vehicleNumber"
-                          placeholder="e.g. RJ31GA9265"
-                          className="h-10 font-mono uppercase tracking-wider"
-                          {...register("vehicleNumber")}
-                        />
-                        {errors.vehicleNumber && (
-                          <p className="text-xs text-destructive">
-                            {errors.vehicleNumber.message}
-                          </p>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        <Input
-                          id="chassisNumber"
-                          list="chassis-suggestions"
-                          placeholder="e.g. CH-00001"
-                          className="h-10 font-mono uppercase tracking-wider"
-                          autoComplete="off"
-                          {...register("chassisNumber")}
-                        />
-                        <datalist id="chassis-suggestions">
-                          {workshopTrailers?.map((t) => (
-                            <option key={t.id} value={t.chassisNumber}>
-                              {t.model
-                                ? `${t.model} — ${t.currentStageName}`
-                                : t.currentStageName}
-                            </option>
-                          ))}
-                        </datalist>
-                        {errors.chassisNumber && (
-                          <p className="text-xs text-destructive">
-                            {errors.chassisNumber.message}
-                          </p>
-                        )}
-                      </>
+                    <Label htmlFor="vehicleNumber" className="font-medium">
+                      Vehicle Number <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="vehicleNumber"
+                      placeholder="e.g. RJ31GA9265"
+                      className="h-10 font-mono uppercase tracking-wider"
+                      {...register("vehicleNumber")}
+                    />
+                    {errors.vehicleNumber && (
+                      <p className="text-xs text-destructive">
+                        {errors.vehicleNumber.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Chassis number & workshop trailer chassis */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="chassisNumber" className="font-medium">
+                      Chassis Number <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="chassisNumber"
+                      placeholder="e.g. MAT448099L1B12345"
+                      className="h-10 font-mono uppercase tracking-wider"
+                      {...register("chassisNumber")}
+                    />
+                    {errors.chassisNumber && (
+                      <p className="text-xs text-destructive">
+                        {errors.chassisNumber.message}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="trailerChassisNumber"
+                      className="font-medium"
+                    >
+                      Trailer Chassis <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="trailerChassisNumber"
+                      list="chassis-suggestions"
+                      placeholder="e.g. CH-00001"
+                      className="h-10 font-mono uppercase tracking-wider"
+                      autoComplete="off"
+                      {...register("trailerChassisNumber")}
+                    />
+                    <datalist id="chassis-suggestions">
+                      {workshopTrailers?.map((t) => (
+                        <option key={t.id} value={t.chassisNumber}>
+                          {t.model
+                            ? `${t.model} — ${t.currentStageName}`
+                            : t.currentStageName}
+                        </option>
+                      ))}
+                    </datalist>
+                    {errors.trailerChassisNumber && (
+                      <p className="text-xs text-destructive">
+                        {errors.trailerChassisNumber.message}
+                      </p>
                     )}
                   </div>
                 </div>

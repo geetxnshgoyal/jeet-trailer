@@ -130,11 +130,27 @@ export function IssueDetail({ id }: { id: string }) {
               </div>
               <div>
                 <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-                  {issue.chassisNumber && !issue.vehicleNumber ? "Trailer Chassis" : "Vehicle Number"}
+                  Vehicle Number
                 </p>
                 <p className="font-semibold tracking-wide font-mono text-foreground">
-                  {issue.vehicleNumber || issue.chassisNumber || "N/A"}
+                  {issue.vehicleNumber || "N/A"}
                 </p>
+                {issue.chassisNumber && (
+                  <p className="text-xs text-muted-foreground">
+                    Chassis{" "}
+                    <span className="font-mono text-foreground">
+                      {issue.chassisNumber}
+                    </span>
+                  </p>
+                )}
+                {issue.trailerChassisNumber && (
+                  <p className="text-xs text-muted-foreground">
+                    Trailer{" "}
+                    <span className="font-mono text-foreground">
+                      {issue.trailerChassisNumber}
+                    </span>
+                  </p>
+                )}
               </div>
             </div>
 

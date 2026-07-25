@@ -77,14 +77,24 @@ export function IssuesTable() {
         accessorKey: "vehicleNumber",
         header: "Vehicle / Chassis",
         cell: ({ row }) => {
+          const { vehicleNumber, trailerChassisNumber, chassisNumber } =
+            row.original;
           const target =
-            row.original.vehicleNumber || row.original.chassisNumber;
-          return target ? (
-            <span className="font-semibold text-foreground tracking-wide font-mono bg-muted/60 px-2 py-0.5 rounded text-xs border border-border">
-              {target}
-            </span>
-          ) : (
-            <span className="text-xs text-muted-foreground">—</span>
+            vehicleNumber || trailerChassisNumber || chassisNumber;
+          if (!target) {
+            return <span className="text-xs text-muted-foreground">—</span>;
+          }
+          return (
+            <div className="space-y-0.5">
+              <span className="inline-block font-semibold text-foreground tracking-wide font-mono bg-muted/60 px-2 py-0.5 rounded text-xs border border-border">
+                {target}
+              </span>
+              {vehicleNumber && trailerChassisNumber && (
+                <p className="font-mono text-[10px] text-muted-foreground">
+                  {trailerChassisNumber}
+                </p>
+              )}
+            </div>
           );
         },
       },
@@ -132,7 +142,7 @@ export function IssuesTable() {
           <Input
             value={vehicleNumber}
             onChange={(e) => setVehicleNumber(e.target.value)}
-            placeholder="Vehicle No."
+            placeholder="Vehicle / Chassis"
             className="sm:w-36 font-mono uppercase"
           />
 

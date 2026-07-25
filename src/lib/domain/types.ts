@@ -203,9 +203,11 @@ export interface IssueRecord {
   vehicleNumber: string;
   /** Reserved for future Vehicle Management module. */
   vehicleId?: string;
-  /** Workshop chassis the item was installed on (in-production trailer). */
+  /** Chassis number stamped on the vehicle itself. */
   chassisNumber?: string;
-  /** Linked workshop trailer, when chassisNumber matches one. */
+  /** Workshop build the item went onto, e.g. CH-00001. */
+  trailerChassisNumber?: string;
+  /** Linked workshop trailer, when trailerChassisNumber matches one. */
   trailerId?: string;
   status: InstallationStatus;
   issuedAt: string;
