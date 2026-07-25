@@ -1,8 +1,8 @@
 /**
  * Backfill `model` and `spec` (size) on existing inventory items.
  *
- * Rim and Tyre stopped being serial-tracked — they are identified by model and
- * size instead — but items created before that change never captured either
+ * Rim and Tyre stopped being serial-tracked, they are identified by model and
+ * size instead, but items created before that change never captured either
  * field. This derives them from the item name, which is where the shop has
  * been putting that information all along.
  *
@@ -26,7 +26,7 @@ const APPLY = process.argv.includes("--apply");
 const ROOT = path.resolve(__dirname, "..");
 
 /**
- * Minimal .env reader — Next.js loads these automatically at runtime, but a
+ * Minimal .env reader, Next.js loads these automatically at runtime, but a
  * standalone node script does not. Values are used, never printed.
  */
 function loadEnv() {
@@ -92,7 +92,7 @@ function deriveModel(name, brand, size, categoryName) {
   model = model.replace(/\s+/g, " ").trim();
   if (!model) return null;
 
-  // "MRF Tyre" would reduce to just "Tyre" — the category, not a model.
+  // "MRF Tyre" would reduce to just "Tyre", the category, not a model.
   // Writing that is worse than leaving the field empty for the admin to fill.
   const normalise = (s) => s.toLowerCase().replace(/s$/, "").replace(/\s+/g, " ").trim();
   if (categoryName && normalise(model) === normalise(categoryName)) return null;
@@ -118,7 +118,7 @@ async function main() {
   // Next.js's dotenv unescapes quoted values before the app's own newline
   // fix-up runs; reading the file directly skips that, so keys stored as
   // "\\n" would keep a stray backslash per line. Collapse any run of
-  // backslashes before an "n" — base64 never contains a backslash.
+  // backslashes before an "n", base64 never contains a backslash.
   const privateKey = privateKeyRaw
     .replace(/^"/, "")
     .replace(/"$/, "")

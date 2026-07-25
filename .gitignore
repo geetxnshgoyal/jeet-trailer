@@ -45,5 +45,9 @@ next-env.d.ts
 *.json.enc
 jeet-trailers-firebase-adminsdk-*.json
 
+<<<<<<< HEAD
+# Local Firestore backups: business data, never commit
+=======
 # Local Firestore backups — business data, never commit
+>>>>>>> origin/feat/workshop-parallel-stages
 backups/

@@ -1,10 +1,11 @@
 import type { MetadataRoute } from "next";
+import { BUSINESS } from "@/lib/domain/business";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Jeet Trailers — Inventory & Workshop",
-    short_name: "Jeet Trailers",
-    description: "Internal inventory and workshop management system for Jeet Trailers.",
+    name: `${BUSINESS.name} Inventory & Workshop`,
+    short_name: BUSINESS.name,
+    description: `Inventory and workshop management for ${BUSINESS.name}, ${BUSINESS.address.city}.`,
     start_url: "/",
     display: "standalone",
     background_color: "#0f172a",

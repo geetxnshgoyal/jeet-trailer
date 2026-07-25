@@ -91,7 +91,7 @@ export function TrailerDetail({ id }: { id: string }) {
           </div>
           <p className="text-sm text-muted-foreground sm:pl-10">
             {trailer.model || "Trailer"}
-            {trailer.description ? ` — ${trailer.description}` : ""}
+            {trailer.description ? `: ${trailer.description}` : ""}
           </p>
         </div>
         {trailer.status === "in_progress" && (
@@ -316,7 +316,7 @@ function CompleteDialog({
         onSuccess: () => {
           toast.success(
             isFinal
-              ? "All stages complete — trailer is ready!"
+              ? "All stages complete. Trailer is ready!"
               : `${stage.name} completed.`,
           );
           setOpen(false);
@@ -340,7 +340,7 @@ function CompleteDialog({
             <DialogTitle>Complete {stage.name}?</DialogTitle>
             <DialogDescription>
               {isFinal
-                ? "This is the last stage outstanding — the trailer will be marked complete and ready for inventory."
+                ? "This is the last stage outstanding. The trailer will be marked complete and ready for inventory."
                 : "This stage will be marked done. Remaining stages are unaffected."}
             </DialogDescription>
           </DialogHeader>

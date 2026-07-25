@@ -15,7 +15,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            // Workshop data changes often but not every second — a short stale
+            // Workshop data changes often but not every second, a short stale
             // window avoids refetch storms while keeping tables fresh.
             staleTime: 30_000,
             retry: 1,

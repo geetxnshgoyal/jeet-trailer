@@ -87,7 +87,7 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
     categoryNameLower === "tyres" ||
     categoryNameLower === "rims";
 
-  // The recipient starts empty — items are usually issued to someone else, so
+  // The recipient starts empty, items are usually issued to someone else, so
   // defaulting to the signed-in admin only invited mis-recorded issues.
 
 
@@ -248,7 +248,7 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
                         <div className="flex items-center justify-between gap-2">
                           <span className="font-medium">{it.name}</span>
                           <span className="text-xs text-muted-foreground">
-                            [{it.categoryName}] — {it.quantity} {it.unit}
+                            [{it.categoryName}] · {it.quantity} {it.unit}
                           </span>
                         </div>
                       </SelectItem>
@@ -262,7 +262,7 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
             )}
           </div>
 
-          {/* 2. Issued To — typeable, with registered workers as suggestions */}
+          {/* 2. Issued To, typeable, with registered workers as suggestions */}
           <div className="space-y-1.5">
             <Label htmlFor="workerName" className="font-medium">
               Issued To <span className="text-destructive">*</span>
@@ -303,7 +303,7 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
             {requiresInstallation ? (
               <>
                 {/* Tyre & Rim Layout: Quantity & Vehicle Number */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="quantity" className="font-medium">
                       Quantity <span className="text-destructive">*</span>
@@ -347,7 +347,7 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
                 </div>
 
                 {/* Chassis number & workshop trailer chassis */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="chassisNumber" className="font-medium">
                       Chassis Number <span className="text-destructive">*</span>
@@ -392,7 +392,7 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
                                 { shouldValidate: true },
                               )
                             }
-                            title={`${t.model ? `${t.model} — ` : ""}${t.currentStageName}`}
+                            title={`${t.model ? `${t.model}, ` : ""}${t.currentStageName}`}
                             className="rounded-full border border-border px-2.5 py-0.5 font-mono text-[11px] text-muted-foreground transition-colors hover:border-primary/40 hover:bg-accent hover:text-foreground"
                           >
                             {t.chassisNumber}

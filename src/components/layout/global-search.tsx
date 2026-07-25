@@ -153,7 +153,7 @@ export function GlobalSearch() {
                             {issue.vehicleNumber ||
                               issue.trailerChassisNumber ||
                               issue.chassisNumber ||
-                              "—"}{" "}
+                              "-"}{" "}
                             · Issued to: {issue.workerName}
                           </span>
                         </button>

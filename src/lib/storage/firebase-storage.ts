@@ -6,7 +6,7 @@ import type { StorageProvider, StoredObject, UploadInput } from "./provider";
  * Firebase Storage implementation of {@link StorageProvider}.
  *
  * Uses the Admin SDK bucket so uploads happen server-side (in API routes)
- * after auth/role checks — clients never write to the bucket directly.
+ * after auth/role checks, clients never write to the bucket directly.
  */
 export class FirebaseStorageProvider implements StorageProvider {
   private extensionFor(fileName: string): string {

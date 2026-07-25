@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 import { getEnvDiagnostics } from "@/lib/env";
 import { SetupGuide } from "@/components/setup-guide";
+import { BUSINESS } from "@/lib/domain/business";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -13,15 +14,15 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Jeet Trailers — Inventory & Workshop",
-    template: "%s · Jeet Trailers",
+    default: `${BUSINESS.name} Inventory & Workshop`,
+    template: `%s · ${BUSINESS.name}`,
   },
-  description:
-    "Internal inventory and workshop management system for Jeet Trailers.",
+  description: `Inventory and workshop management for ${BUSINESS.name}, ${BUSINESS.nature.toLowerCase()} in ${BUSINESS.address.city}, ${BUSINESS.address.state}.`,
+  applicationName: BUSINESS.name,
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Jeet Trailers",
+    title: BUSINESS.name,
   },
   icons: {
     apple: "/icon-192.png",

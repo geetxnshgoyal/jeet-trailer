@@ -14,21 +14,25 @@ import type {
   TrailerStage,
   TrailerHistoryEvent,
   TrailerStatus,
+  Role,
 } from "@/lib/domain/types";
 
 /**
  * Workshop trailer data-access.
  *
- * A trailer's pipeline is an embedded, ordered `stages` array; the chassis is
- * always "held" by exactly one stage (`currentStageIndex`). Stage transitions
- * run in a transaction against the live doc so two workers can never both
- * claim or complete the same stage:
+ * A trailer's pipeline is an embedded `stages` array. Stages are independent:
+ * any pending stage can be started at any time, so painting may begin before
+ * body fabrication finishes and levels can run in parallel. Each stage moves
+ * pending -> in_progress -> completed, and transitions run in a transaction
+ * against the live doc so two workers can never both claim the same stage.
  *
- *   pending ──start──▶ in_progress ──complete──▶ completed, advance pointer
+ * Because there is no single cursor to advance, `currentStageIndex` is derived
+ * after every transition (see deriveProgress): whatever is being worked on,
+ * else the first stage still waiting. The trailer is `completed` only once
+ * every stage is done, never merely because the last-indexed one finished.
  *
- * Completing the final stage marks the whole trailer `completed`. Every
- * transition also appends an immutable event to the trailer's `history`
- * subcollection — that feed is the audit trail the admin timeline renders.
+ * Every transition also appends an immutable event to the trailer's `history`
+ * subcollection, the audit trail the admin timeline renders.
  */
 
 function trailersCol() {
@@ -38,7 +42,7 @@ function trailersCol() {
 interface Actor {
   id: string;
   name: string;
-  role: "admin" | "worker";
+  role: Role;
 }
 
 export interface CreateTrailerData {
@@ -124,7 +128,7 @@ export async function createTrailer(
 }
 
 /**
- * Start a stage. Stages are independent — any pending stage can be started at
+ * Start a stage. Stages are independent, any pending stage can be started at
  * any time, so painting can begin before body fabrication finishes and two
  * levels can run in parallel. A worker can start a stage assigned to them or
  * one that is unassigned (which claims it); admins can start any stage.
@@ -182,7 +186,7 @@ export async function startStage(
 
 /**
  * Complete a stage. Only the worker on it (or an admin) may complete it.
- * The trailer finishes once every stage is complete — not merely when the
+ * The trailer finishes once every stage is complete, not merely when the
  * last one is, since stages can be worked out of order.
  */
 export async function completeStage(
@@ -215,7 +219,7 @@ export async function completeStage(
       ...(notes?.trim() ? { notes: notes.trim() } : {}),
     };
 
-    // What is left once this stage lands — the next thing awaiting work.
+    // What is left once this stage lands, the next thing awaiting work.
     const remaining = trailer.stages.filter(
       (s) => s.index !== stage.index && s.status !== "completed",
     );
@@ -225,8 +229,8 @@ export async function completeStage(
     let completedNote = `${updated.workerName} completed ${stage.name} on ${trailer.chassisNumber}`;
     if (next) {
       completedNote += next.workerName
-        ? ` — next up ${next.name} (${next.workerName})`
-        : ` — next up ${next.name}`;
+        ? `, next up ${next.name} (${next.workerName})`
+        : `, next up ${next.name}`;
     }
     const events: EventSeed[] = [
       { type: "stage_completed", note: completedNote },
@@ -234,7 +238,7 @@ export async function completeStage(
     if (allDone) {
       events.push({
         type: "completed",
-        note: `Trailer ${trailer.chassisNumber} finished all stages — ready for inventory`,
+        note: `Trailer ${trailer.chassisNumber} finished all stages, ready for inventory`,
       });
     }
 
@@ -279,10 +283,10 @@ export async function assignStageWorker(
         ? { workerId: worker.id, workerName: worker.name }
         : { workerId: undefined, workerName: undefined }),
     };
-    // Firestore rejects `undefined` fields — strip them.
+    // Firestore rejects `undefined` fields, strip them.
     stages[stageIndex] = stripUndefined(stages[stageIndex]);
 
-    // `undefined` here means "clear the field" — toUpdatePayload turns it
+    // `undefined` here means "clear the field", toUpdatePayload turns it
     // into FieldValue.delete() so a cleared assignment doesn't linger.
     const patch: Partial<TrailerRecord> = { stages, updatedAt: now };
     if (stageIndex === trailer.currentStageIndex) {

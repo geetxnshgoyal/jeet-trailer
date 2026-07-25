@@ -6,7 +6,7 @@ import type { SignedInUser } from "@/lib/auth/auth-client";
 
 /**
  * Everything under (app) depends on the per-request session cookie, so it must
- * render dynamically — never statically prerendered at build time.
+ * render dynamically, never statically prerendered at build time.
  */
 export const dynamic = "force-dynamic";
 
@@ -16,7 +16,7 @@ export const dynamic = "force-dynamic";
  * hands off to the shell (sidebar + topbar + content).
  *
  * Middleware also guards these routes, but we re-check here because middleware
- * only inspects cookie presence — this is the authoritative verification.
+ * only inspects cookie presence, this is the authoritative verification.
  */
 export default async function AppLayout({
   children,

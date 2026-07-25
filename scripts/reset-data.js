@@ -2,12 +2,12 @@
  * Reset the Firestore data for a clean client handover.
  *
  * WIPES:   inventory (+ history), issues, trailers (+ history), categories,
- *          counters — so item/issue/chassis codes restart at 1.
- * KEEPS:   users (and every Firebase Auth account — this script never touches
+ *          counters, so item/issue/chassis codes restart at 1.
+ * KEEPS:   users (and every Firebase Auth account, this script never touches
  *          Auth, so logins keep working).
  *
  * The seven default categories are re-seeded automatically by the app on the
- * first GET /api/categories, so clearing them is safe — and they come back
+ * first GET /api/categories, so clearing them is safe, and they come back
  * with Rim/Tyre correctly marked as not serial-tracked.
  *
  * A full JSON backup is written before anything is deleted, so a mistaken run

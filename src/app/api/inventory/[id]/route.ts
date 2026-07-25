@@ -1,15 +1,15 @@
 import { NextRequest } from "next/server";
-import { requireRole, requireUser } from "@/lib/auth/session";
+import { requireRole, requireInventoryAccess } from "@/lib/auth/session";
 import { ok, handler, DomainError } from "@/lib/api/response";
 import { updateItemSchema } from "@/lib/domain/schemas";
 import { getItem, updateItem, deleteItem } from "@/lib/data/inventory";
 
 /**
- * GET /api/inventory/[id] — fetch a single item (any authenticated user).
+ * GET /api/inventory/[id]: fetch a single item (any authenticated user).
  */
 export const GET = handler(
   async (_req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
-    await requireUser();
+    await requireInventoryAccess();
     const { id } = await ctx.params;
     const item = await getItem(id);
     if (!item) throw new DomainError("NOT_FOUND", "Item not found", 404);
@@ -18,7 +18,7 @@ export const GET = handler(
 );
 
 /**
- * PATCH /api/inventory/[id] — edit item metadata (admin only). Quantity is not
+ * PATCH /api/inventory/[id]: edit item metadata (admin only). Quantity is not
  * editable here; it changes only through the audited stock-adjust endpoint.
  */
 export const PATCH = handler(
@@ -47,7 +47,7 @@ export const PATCH = handler(
 );
 
 /**
- * DELETE /api/inventory/[id] — remove an item (admin only). Blocked by the data
+ * DELETE /api/inventory/[id]: remove an item (admin only). Blocked by the data
  * layer if the item has any issue history, protecting the audit trail.
  */
 export const DELETE = handler(

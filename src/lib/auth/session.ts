@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { cache } from "react";
 import { adminAuth, adminDb } from "@/lib/firebase/admin";
 import { serverEnv } from "@/lib/env";
-import { COLLECTIONS } from "@/lib/domain/constants";
+import { COLLECTIONS, canAccessInventory } from "@/lib/domain/constants";
 import type { AppUser, Role } from "@/lib/domain/types";
 
 /**
@@ -12,7 +12,7 @@ import type { AppUser, Role } from "@/lib/domain/types";
  * Flow: the client signs in with the Web SDK, obtains an ID token, and POSTs it
  * to /api/auth/session. We verify it and mint a long-lived HTTP-only session
  * cookie (see createSessionCookie). Every server request then reads that cookie
- * to resolve the current user — the ID token itself never lives in the browser
+ * to resolve the current user, the ID token itself never lives in the browser
  * beyond the initial exchange.
  */
 
@@ -74,7 +74,7 @@ export const getCurrentUser = cache(async (): Promise<SessionUser | null> => {
       active: data.active,
     };
   } catch {
-    // Expired, revoked, or malformed cookie — treat as signed out.
+    // Expired, revoked, or malformed cookie, treat as signed out.
     return null;
   }
 });
@@ -91,6 +91,19 @@ export async function requireRole(role: Role): Promise<SessionUser> {
   const user = await requireUser();
   if (role === "admin" && user.role !== "admin") {
     throw new AuthError("FORBIDDEN", "Admin access required");
+  }
+  return user;
+}
+
+/**
+ * Require a user who may see stock. Workshop staff are restricted to the
+ * production line and repairs, so hiding the nav is not enough: the API has
+ * to refuse them too, or the data is a URL away.
+ */
+export async function requireInventoryAccess(): Promise<SessionUser> {
+  const user = await requireUser();
+  if (!canAccessInventory(user.role)) {
+    throw new AuthError("FORBIDDEN", "Not available for workshop accounts");
   }
   return user;
 }

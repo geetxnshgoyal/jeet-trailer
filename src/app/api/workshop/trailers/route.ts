@@ -8,7 +8,7 @@ import { COLLECTIONS } from "@/lib/domain/constants";
 import type { AppUser, TrailerRecord } from "@/lib/domain/types";
 
 /**
- * GET /api/workshop/trailers — list trailers (any authenticated user).
+ * GET /api/workshop/trailers: list trailers (any authenticated user).
  * Workers use `workerId=me` to see builds currently waiting on them.
  */
 export const GET = handler(async (req: NextRequest) => {
@@ -27,7 +27,7 @@ export const GET = handler(async (req: NextRequest) => {
 });
 
 /**
- * POST /api/workshop/trailers — put a new trailer into production (admin only).
+ * POST /api/workshop/trailers: put a new trailer into production (admin only).
  * Worker names are resolved server-side and denormalized onto the stages so
  * non-admin viewers never need the (admin-only) workers API.
  */

@@ -17,7 +17,7 @@ import type {
 } from "@/lib/domain/types";
 
 /**
- * Issue & installation data-access — the core of the system.
+ * Issue & installation data-access, the core of the system.
  *
  * Issuing an item is a single Firestore transaction that:
  *   1. reads the item and checks sufficient stock,
@@ -26,7 +26,7 @@ import type {
  *   4. appends an "issued" event to the item's history subcollection.
  * Either all four land or none do, so stock can never drift from the ledger.
  *
- * Issue records are NEVER deleted — they are the audit trail. Installation
+ * Issue records are NEVER deleted, they are the audit trail. Installation
  * completion mutates the same record in place (status + photos + timestamp)
  * and appends an "installed" history event.
  */
@@ -56,7 +56,7 @@ export interface CreateIssueInput {
   /** Recipient. workerId is "" for free-typed names without portal accounts. */
   workerId: string;
   workerName: string;
-  /** Session user performing the issue — recorded on the history event. */
+  /** Session user performing the issue, recorded on the history event. */
   actorId: string;
   actorName: string;
 }
@@ -129,7 +129,7 @@ export async function createIssue(
       vehicleNumber: vehicleNo,
       status: issueStatus,
       issuedAt: now,
-      // Firestore rejects undefined fields — only set installedAt when real.
+      // Firestore rejects undefined fields, only set installedAt when real.
       ...(issueStatus === "installed" ? { installedAt: now } : {}),
       photos: input.photos || [],
       createdAt: now,
@@ -176,7 +176,7 @@ export interface CompleteInstallationInput {
 
 /**
  * Mark an issue installed: attach photos, set status + installedAt, and append
- * an "installed" event to the item's history. Idempotent-ish — re-completing an
+ * an "installed" event to the item's history. Idempotent-ish, re-completing an
  * already-installed issue is rejected so timestamps aren't overwritten.
  */
 export async function completeInstallation(
@@ -308,7 +308,7 @@ export async function getIssue(id: string): Promise<IssueRecord | null> {
   return snap.exists ? (snap.data() as IssueRecord) : null;
 }
 
-/** Count issues created since a given ISO instant — used by the dashboard. */
+/** Count issues created since a given ISO instant, used by the dashboard. */
 export async function countIssuesSince(iso: string): Promise<number> {
   const snap = await issuesCol().where("issuedAt", ">=", iso).count().get();
   return snap.data().count;

@@ -8,7 +8,7 @@ import { nowIso } from "@/lib/utils";
 import type { AppUser } from "@/lib/domain/types";
 
 /**
- * GET /api/workers — list all users (admin only).
+ * GET /api/workers: list all users (admin only).
  * Ordered by creation so the roster is stable.
  */
 export const GET = handler(async () => {
@@ -22,7 +22,7 @@ export const GET = handler(async () => {
 });
 
 /**
- * POST /api/workers — provision a new worker or admin (admin only).
+ * POST /api/workers: provision a new worker or admin (admin only).
  *
  * Creates the Firebase Auth account, sets the role custom claim, and mirrors
  * the profile into the `users` collection keyed by UID. Workers cannot

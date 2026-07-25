@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireRole, requireUser } from "@/lib/auth/session";
+import { requireRole, requireInventoryAccess } from "@/lib/auth/session";
 import { ok, handler, DomainError } from "@/lib/api/response";
 import { createItemSchema } from "@/lib/domain/schemas";
 import { listItems, createItem } from "@/lib/data/inventory";
@@ -7,11 +7,11 @@ import { getCategory } from "@/lib/data/categories";
 import type { InventoryItem } from "@/lib/domain/types";
 
 /**
- * GET /api/inventory — list items with optional ?category, ?status, ?search
+ * GET /api/inventory: list items with optional ?category, ?status, ?search
  * filters. Any authenticated user (admin or worker) may read inventory.
  */
 export const GET = handler(async (req: NextRequest) => {
-  await requireUser();
+  await requireInventoryAccess();
   const { searchParams } = new URL(req.url);
   const items = await listItems({
     categoryId: searchParams.get("category") ?? undefined,
@@ -24,7 +24,7 @@ export const GET = handler(async (req: NextRequest) => {
 });
 
 /**
- * POST /api/inventory — create an item (admin only).
+ * POST /api/inventory: create an item (admin only).
  * Bridges the API field names (size) to the domain shape (spec) and resolves
  * the category so the item stores its denormalized category name + serial rule.
  */

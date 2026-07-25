@@ -8,7 +8,7 @@ import { nowIso } from "@/lib/utils";
 import type { AppUser } from "@/lib/domain/types";
 
 /**
- * PATCH /api/workers/[id] — update a worker's profile, role, or active state.
+ * PATCH /api/workers/[id]: update a worker's profile, role, or active state.
  *
  * DELETE is intentionally unsupported: workers are disabled (soft flag), never
  * removed, so their issue history and audit trail remain intact.

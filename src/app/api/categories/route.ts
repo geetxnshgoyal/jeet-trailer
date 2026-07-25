@@ -9,7 +9,7 @@ import {
 } from "@/lib/data/categories";
 
 /**
- * GET /api/categories — list categories (any authenticated user).
+ * GET /api/categories: list categories (any authenticated user).
  * Seeds the seven defaults on first call so a fresh project is never empty.
  */
 export const GET = handler(async () => {
@@ -19,7 +19,7 @@ export const GET = handler(async () => {
   return ok({ categories });
 });
 
-/** POST /api/categories — create a custom category (admin only). */
+/** POST /api/categories: create a custom category (admin only). */
 export const POST = handler(async (req: NextRequest) => {
   await requireRole("admin");
   const input = createCategorySchema.parse(await req.json());

@@ -1,13 +1,13 @@
 import { NextRequest } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
-import { requireUser } from "@/lib/auth/session";
+import { requireInventoryAccess } from "@/lib/auth/session";
 import { ok, handler, DomainError } from "@/lib/api/response";
 import { getStorage } from "@/lib/storage";
 import { COLLECTIONS } from "@/lib/domain/constants";
 import type { IssueRecord, InstallationPhoto } from "@/lib/domain/types";
 
 /**
- * POST /api/issues/[id]/photos — upload one or more installation photos for an
+ * POST /api/issues/[id]/photos: upload one or more installation photos for an
  * issue. Multipart form data with one or more `files` parts.
  *
  * Photos are uploaded through the storage abstraction (Firebase Storage today,
@@ -23,7 +23,7 @@ const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/heic"])
 
 export const POST = handler(
   async (req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
-    await requireUser();
+    await requireInventoryAccess();
     const { id } = await ctx.params;
 
     // Confirm the issue exists before spending time on uploads.

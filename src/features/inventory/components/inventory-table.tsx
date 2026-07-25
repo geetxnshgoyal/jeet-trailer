@@ -80,7 +80,7 @@ export function InventoryTable({ canManage }: { canManage: boolean }) {
           row.original.model ? (
             <span className="text-sm">{row.original.model}</span>
           ) : (
-            <span className="text-muted-foreground">—</span>
+            <span className="text-muted-foreground">-</span>
           ),
       },
       {

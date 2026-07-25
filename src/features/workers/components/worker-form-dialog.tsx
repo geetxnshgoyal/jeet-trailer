@@ -5,6 +5,7 @@ import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { createWorkerSchema, updateWorkerSchema } from "@/lib/domain/schemas";
+import type { Role } from "@/lib/domain/types";
 import { useCreateWorker, useUpdateWorker } from "../hooks";
 import { toast } from "sonner";
 import {
@@ -153,7 +154,7 @@ export function WorkerFormDialog({ worker, trigger }: Readonly<WorkerFormDialogP
             </>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="phone">Phone (Optional)</Label>
               <Input id="phone" placeholder="e.g. +91 9876543210" {...register("phone")} />
@@ -166,16 +167,21 @@ export function WorkerFormDialog({ worker, trigger }: Readonly<WorkerFormDialogP
               <Label htmlFor="role">System Role</Label>
               <Select
                 value={selectedRole}
-                onValueChange={(val) => setValue("role", val as "admin" | "worker", { shouldValidate: true })}
+                onValueChange={(val) => setValue("role", val as Role, { shouldValidate: true })}
               >
                 <SelectTrigger id="role">
                   <SelectValue placeholder="Select Role" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="worker">Worker</SelectItem>
+                  <SelectItem value="workshop">Workshop Worker</SelectItem>
                   <SelectItem value="admin">Administrator</SelectItem>
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">
+                Workshop workers see only the production line and repairs, not
+                inventory or issues.
+              </p>
               {errors.role && (
                 <p className="text-xs text-destructive">{errors.role.message?.toString()}</p>
               )}

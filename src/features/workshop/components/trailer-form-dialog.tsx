@@ -37,7 +37,7 @@ type FormValues = z.input<typeof createTrailerSchema>;
 
 /**
  * Admin dialog to put a new trailer into production. The stage pipeline is
- * pre-filled from the default workshop levels and fully editable — rename,
+ * pre-filled from the default workshop levels and fully editable, rename,
  * add, remove, and optionally pre-assign a worker to each level.
  */
 export function TrailerFormDialog({ trigger }: { trigger: React.ReactNode }) {
@@ -113,7 +113,7 @@ export function TrailerFormDialog({ trigger }: { trigger: React.ReactNode }) {
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label htmlFor="chassisNumber">Chassis Number</Label>
               <Input
@@ -213,7 +213,7 @@ export function TrailerFormDialog({ trigger }: { trigger: React.ReactNode }) {
               <p className="text-xs text-destructive">
                 {errors.stages.message ||
                   errors.stages.root?.message ||
-                  "Check the stage names — each needs at least 2 characters."}
+                  "Check the stage names, each needs at least 2 characters."}
               </p>
             )}
           </div>
