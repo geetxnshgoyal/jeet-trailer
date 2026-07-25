@@ -93,6 +93,13 @@ export function ItemHistoryTimeline({ itemId }: { itemId: string }) {
                   Vehicle {evt.vehicleNumber}
                 </p>
               )}
+              {(evt.partyName || evt.billNumber) && (
+                <p className="text-sm text-muted-foreground">
+                  {evt.partyName && <>Party: {evt.partyName}</>}
+                  {evt.partyName && evt.billNumber && " · "}
+                  {evt.billNumber && <>Bill No: {evt.billNumber}</>}
+                </p>
+              )}
               <p className="mt-0.5 text-xs text-muted-foreground">
                 {formatDateTime(evt.createdAt)} · {evt.actorName}
               </p>

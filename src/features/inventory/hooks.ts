@@ -107,8 +107,12 @@ export function useUpdateItem(id: string) {
 export function useAdjustStock(id: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (body: { delta: number; reason: string }) =>
-      api.post<{ item: InventoryItem }>(`/api/inventory/${id}/stock`, body),
+    mutationFn: (body: {
+      delta: number;
+      reason: string;
+      partyName?: string;
+      billNumber?: string;
+    }) => api.post<{ item: InventoryItem }>(`/api/inventory/${id}/stock`, body),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: inventoryKeys.all });
       qc.invalidateQueries({ queryKey: inventoryKeys.detail(id) });

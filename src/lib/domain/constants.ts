@@ -2,8 +2,8 @@ import type { StockStatus, TrailerStatus, TrailerStageStatus } from "./types";
 
 /**
  * The seven default inventory categories Jeet Trailers ships with.
- * `serialTracked` items (tyres, rims) require a serial number per unit;
- * the rest are consumables tracked by quantity only.
+ * All ship untracked — stock is kept by quantity, with model and size
+ * identifying a line. Custom categories may still opt into serial tracking.
  */
 export const DEFAULT_CATEGORIES: ReadonlyArray<{
   name: string;
@@ -13,8 +13,8 @@ export const DEFAULT_CATEGORIES: ReadonlyArray<{
   codePrefix: string;
   defaultUnit: string;
 }> = [
-  { name: "Rim", slug: "rim", serialTracked: true, codePrefix: "RIM", defaultUnit: "pcs" },
-  { name: "Tyre", slug: "tyre", serialTracked: true, codePrefix: "TYR", defaultUnit: "pcs" },
+  { name: "Rim", slug: "rim", serialTracked: false, codePrefix: "RIM", defaultUnit: "pcs" },
+  { name: "Tyre", slug: "tyre", serialTracked: false, codePrefix: "TYR", defaultUnit: "pcs" },
   { name: "Welding Rod", slug: "welding-rod", serialTracked: false, codePrefix: "WLR", defaultUnit: "packet" },
   { name: "MIG Roll", slug: "mig-roll", serialTracked: false, codePrefix: "MIG", defaultUnit: "roll" },
   { name: "Welding Holder", slug: "welding-holder", serialTracked: false, codePrefix: "WLH", defaultUnit: "pcs" },
@@ -32,6 +32,28 @@ export const UNITS = ["pcs", "packet", "roll", "box", "meter", "kg", "set"] as c
 
 /** System roles. Admin has full access; workers issue/install only. */
 export const USER_ROLES = ["admin", "worker"] as const;
+
+/**
+ * Categories that never carry serial numbers, whatever their stored flag says.
+ * Rim and Tyre were seeded as serial-tracked but the workshop identifies them
+ * by model and size instead, so this overrides those legacy category docs
+ * without needing a data migration.
+ */
+const NEVER_SERIAL_TRACKED = ["rim", "rims", "tyre", "tyres"];
+
+/**
+ * Whether items in a category require a unique serial number.
+ * Single source of truth for the form, the API, and the data layer.
+ */
+export function isSerialTracked(category: {
+  name?: string;
+  slug?: string;
+  serialTracked?: boolean;
+}): boolean {
+  const key = (category.slug || category.name || "").trim().toLowerCase();
+  if (NEVER_SERIAL_TRACKED.includes(key)) return false;
+  return !!category.serialTracked;
+}
 
 /** Derive stock status from quantity and threshold. Single source of truth. */
 export function deriveStockStatus(

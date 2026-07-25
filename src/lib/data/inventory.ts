@@ -7,6 +7,7 @@ import {
   CUSTOM_CATEGORY_CODE_PREFIX,
   ITEM_HISTORY_SUBCOLLECTION,
   deriveStockStatus,
+  isSerialTracked,
 } from "@/lib/domain/constants";
 import { reserveCode } from "@/lib/data/counters";
 import { nowIso } from "@/lib/utils";
@@ -74,16 +75,11 @@ export interface CreateItemInput {
 export async function createItem(
   input: CreateItemInput,
 ): Promise<InventoryItem> {
-  const catName = input.category.name.trim().toLowerCase();
-  const isRimOrTyre =
-    input.category.serialTracked ||
-    catName === "rim" ||
-    catName === "tyre" ||
-    catName === "rims" ||
-    catName === "tyres";
+  const serialTracked = isSerialTracked(input.category);
 
-  // Serial-tracked categories (Rim/Tyre) require a unique serial.
-  if (isRimOrTyre) {
+  // Serial-tracked categories require a unique serial. Rim/Tyre are not
+  // serial-tracked — they are identified by model and size.
+  if (serialTracked) {
     if (!input.serialNumber?.trim()) {
       throw new DomainError(
         "SERIAL_REQUIRED",
@@ -126,7 +122,7 @@ export async function createItem(
     unit: input.unit,
     lowStockThreshold: threshold,
     status: deriveStockStatus(quantity, threshold),
-    serialNumber: isRimOrTyre ? input.serialNumber?.trim() : undefined,
+    serialNumber: serialTracked ? input.serialNumber?.trim() : undefined,
     remarks: input.remarks,
     photoBase64: input.photoBase64,
     createdAt: now,
@@ -183,7 +179,7 @@ export async function listItems(
   if (filter.search?.trim()) {
     const needle = filter.search.trim().toLowerCase();
     items = items.filter((it) =>
-      [it.name, it.code, it.brand, it.serialNumber, it.spec]
+      [it.name, it.code, it.brand, it.model, it.serialNumber, it.spec]
         .filter(Boolean)
         .some((f) => f!.toLowerCase().includes(needle)),
     );
@@ -278,6 +274,8 @@ export async function adjustStock(input: {
   actorId: string;
   actorName: string;
   note?: string;
+  partyName?: string;
+  billNumber?: string;
 }): Promise<InventoryItem> {
   const ref = itemsCol().doc(input.itemId);
   return adminDb().runTransaction(async (tx) => {
@@ -311,6 +309,8 @@ export async function adjustStock(input: {
         resultingQuantity: nextQty,
         actorId: input.actorId,
         actorName: input.actorName,
+        partyName: input.partyName?.trim() || undefined,
+        billNumber: input.billNumber?.trim() || undefined,
         note:
           input.note ??
           `Stock ${input.delta >= 0 ? "increased" : "reduced"} by ${Math.abs(

@@ -41,11 +41,21 @@ export function StockAdjustDialog({
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<{ amount: number; reason: string }>({
-    defaultValues: { amount: 1, reason: "" },
+  } = useForm<{
+    amount: number;
+    reason: string;
+    partyName: string;
+    billNumber: string;
+  }>({
+    defaultValues: { amount: 1, reason: "", partyName: "", billNumber: "" },
   });
 
-  async function onSubmit(values: { amount: number; reason: string }) {
+  async function onSubmit(values: {
+    amount: number;
+    reason: string;
+    partyName: string;
+    billNumber: string;
+  }) {
     const amount = Math.abs(Number(values.amount));
     const delta = direction === "add" ? amount : -amount;
 
@@ -53,6 +63,8 @@ export function StockAdjustDialog({
     const parsed = stockAdjustSchema.safeParse({
       delta,
       reason: values.reason,
+      partyName: values.partyName,
+      billNumber: values.billNumber,
     } satisfies StockAdjustInput);
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Invalid adjustment");
@@ -64,7 +76,7 @@ export function StockAdjustDialog({
       toast.success(
         `Stock ${direction === "add" ? "increased" : "reduced"} by ${amount}`,
       );
-      reset({ amount: 1, reason: "" });
+      reset({ amount: 1, reason: "", partyName: "", billNumber: "" });
       setOpen(false);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Adjustment failed");
@@ -120,6 +132,25 @@ export function StockAdjustDialog({
               aria-invalid={!!errors.reason}
               {...register("reason")}
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-2">
+              <Label htmlFor="partyName">Party Name</Label>
+              <Input
+                id="partyName"
+                placeholder="e.g. Essar Traders"
+                {...register("partyName")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="billNumber">Bill No.</Label>
+              <Input
+                id="billNumber"
+                placeholder="e.g. INV-2431"
+                {...register("billNumber")}
+              />
+            </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-2">

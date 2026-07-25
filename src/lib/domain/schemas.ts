@@ -65,6 +65,7 @@ export const createItemSchema = z.object({
   categoryId: trimmed(1, 64, "Category"),
   name: trimmed(2, 120, "Item name"),
   brand: z.string().trim().max(80).optional().or(z.literal("")),
+  model: z.string().trim().max(80).optional().or(z.literal("")),
   supplierName: z.string().trim().max(120).optional().or(z.literal("")),
   invoiceNumber: z.string().trim().max(80).optional().or(z.literal("")),
   purchaseDate: z.string().trim().optional().or(z.literal("")),
@@ -76,7 +77,6 @@ export const createItemSchema = z.object({
     .int()
     .min(0, "Threshold cannot be negative")
     .default(5),
-  serialNumber: z.string().trim().max(120).optional().or(z.literal("")),
   remarks: z.string().trim().max(500).optional().or(z.literal("")),
   photoBase64: z.string().optional(),
 });
@@ -92,6 +92,9 @@ export const stockAdjustSchema = z.object({
     .int()
     .refine((n) => n !== 0, "Adjustment cannot be zero"),
   reason: trimmed(2, 200, "Reason"),
+  /** Supplier/party the stock came from — free text, recorded in history. */
+  partyName: z.string().trim().max(120).optional().or(z.literal("")),
+  billNumber: z.string().trim().max(80).optional().or(z.literal("")),
 });
 export type StockAdjustInput = z.infer<typeof stockAdjustSchema>;
 
@@ -143,8 +146,12 @@ export type AssignStageWorkerInput = z.infer<typeof assignStageWorkerSchema>;
 export const createIssueSchema = z.object({
   itemId: trimmed(1, 64, "Item"),
   workerId: z.string().trim().optional(),
+  /** Free-typed recipient name for people without portal accounts. */
+  workerName: z.string().trim().max(80).optional().or(z.literal("")),
   quantity: z.coerce.number().int().min(1, "Quantity must be at least 1"),
   vehicleNumber: vehicleNumberSchema.optional().or(z.literal("")),
+  /** For installs on an in-production trailer instead of a registered vehicle. */
+  chassisNumber: chassisNumberSchema.optional().or(z.literal("")),
   serialNumber: z.string().trim().max(120).optional().or(z.literal("")),
   status: z.enum(["issued", "installed", "cancelled"]).optional(),
   photos: z

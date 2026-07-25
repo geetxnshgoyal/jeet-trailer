@@ -6,6 +6,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createIssueSchema } from "@/lib/domain/schemas";
 import { useCreateIssue, useInventoryForIssues, useWorkersList } from "../hooks";
+import { useTrailers } from "@/features/workshop/hooks";
 import { useAuth } from "@/lib/auth/auth-context";
 import { toast } from "sonner";
 import {
@@ -42,11 +43,16 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
   const [open, setOpen] = useState(false);
   const { user } = useAuth();
   const { data: items, isLoading: loadingItems } = useInventoryForIssues();
-  const { data: workers, isLoading: loadingWorkers } = useWorkersList();
+  const { data: workers } = useWorkersList();
   const createIssueMutation = useCreateIssue();
 
   const [photos, setPhotos] = useState<PhotoItem[]>([]);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  /** Install target: a registered vehicle or an in-production trailer chassis. */
+  const [installTarget, setInstallTarget] = useState<"vehicle" | "chassis">(
+    "vehicle",
+  );
+  const { data: workshopTrailers } = useTrailers({ status: "in_progress" });
 
   const activeWorkers = workers?.filter((w) => w.active !== false) || [];
 
@@ -63,8 +69,10 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
     defaultValues: {
       itemId: "",
       workerId: "",
+      workerName: "",
       quantity: 1,
       vehicleNumber: "",
+      chassisNumber: "",
       serialNumber: "",
       status: "installed",
       notes: "",
@@ -72,7 +80,7 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
   });
 
   const selectedItemId = watch("itemId");
-  const selectedWorkerId = watch("workerId");
+  const typedWorkerName = watch("workerName");
   const selectedStatus = watch("status");
 
   const selectedItem = items?.find((it) => it.id === selectedItemId);
@@ -85,19 +93,13 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
     categoryNameLower === "tyres" ||
     categoryNameLower === "rims";
 
-  // Default worker to logged-in user when modal opens or workers load
+  // Default the recipient to the logged-in user's name when the modal opens
   useEffect(() => {
-    if (open && user?.id && !selectedWorkerId) {
-      setValue("workerId", user.id, { shouldValidate: true });
+    if (open && user?.name && !typedWorkerName) {
+      setValue("workerName", user.name, { shouldValidate: true });
     }
-  }, [open, user, selectedWorkerId, setValue]);
+  }, [open, user, typedWorkerName, setValue]);
 
-  // Adjust default quantity when item changes
-  useEffect(() => {
-    if (requiresInstallation) {
-      setValue("quantity", 1);
-    }
-  }, [requiresInstallation, setValue]);
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
@@ -136,18 +138,35 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
       reset();
       setPhotos([]);
       setPhotoError(null);
+      setInstallTarget("vehicle");
     }
   };
 
   const onSubmit = (data: z.input<typeof createIssueSchema>) => {
-    if (!data.workerId) {
-      toast.error("Please select a worker in 'Issued To'.");
+    const recipientName = data.workerName?.trim();
+    if (!recipientName) {
+      toast.error("Please enter who the item is issued to.");
       return;
     }
+    // A typed name matching a registered worker links their account;
+    // any other name is recorded as-is.
+    const matched = activeWorkers.find(
+      (w) => w.name.trim().toLowerCase() === recipientName.toLowerCase(),
+    );
 
     if (requiresInstallation) {
-      if (!data.vehicleNumber || data.vehicleNumber.trim().length < 4) {
+      if (
+        installTarget === "vehicle" &&
+        (!data.vehicleNumber || data.vehicleNumber.trim().length < 4)
+      ) {
         toast.error("Vehicle number is required for installation tracking.");
+        return;
+      }
+      if (
+        installTarget === "chassis" &&
+        (!data.chassisNumber || data.chassisNumber.trim().length < 3)
+      ) {
+        toast.error("Chassis number is required for installation tracking.");
         return;
       }
     }
@@ -160,13 +179,21 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
 
     const body = {
       itemId: data.itemId,
-      workerId: data.workerId,
-      quantity: requiresInstallation ? 1 : Number(data.quantity),
+      workerId: matched?.id,
+      workerName: recipientName,
+      quantity: Number(data.quantity),
       notes: data.notes?.trim() || undefined,
       serialNumber: selectedItem?.serialNumber || data.serialNumber || undefined,
       ...(requiresInstallation
         ? {
-            vehicleNumber: data.vehicleNumber?.trim().toUpperCase(),
+            vehicleNumber:
+              installTarget === "vehicle"
+                ? data.vehicleNumber?.trim().toUpperCase()
+                : "",
+            chassisNumber:
+              installTarget === "chassis"
+                ? data.chassisNumber?.trim().toUpperCase()
+                : "",
             status: (data.status as "installed" | "issued") || "installed",
             photos: photoObjects,
           }
@@ -247,49 +274,32 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
             )}
           </div>
 
-          {/* 2. Issued To (Worker Searchable Dropdown) */}
+          {/* 2. Issued To — typeable, with registered workers as suggestions */}
           <div className="space-y-1.5">
-            <Label htmlFor="workerId" className="font-medium">
-              Issued To (Worker) <span className="text-destructive">*</span>
+            <Label htmlFor="workerName" className="font-medium">
+              Issued To <span className="text-destructive">*</span>
             </Label>
-            {loadingWorkers ? (
-              <div className="flex h-10 items-center justify-center rounded-md border border-input bg-muted/20 text-muted-foreground text-sm">
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading workers...
-              </div>
-            ) : (
-              <Select
-                value={selectedWorkerId}
-                onValueChange={(val) => {
-                  setValue("workerId", val, { shouldValidate: true });
-                  clearErrors("workerId");
-                }}
-              >
-                <SelectTrigger id="workerId" className="h-10">
-                  <SelectValue placeholder="Select worker receiving item" />
-                </SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {activeWorkers.length === 0 ? (
-                    <div className="p-2 text-center text-xs text-muted-foreground">
-                      No active workers found.
-                    </div>
-                  ) : (
-                    activeWorkers.map((w) => (
-                      <SelectItem key={w.id} value={w.id}>
-                        <div className="flex items-center gap-2">
-                          <User className="h-3.5 w-3.5 text-muted-foreground" />
-                          <span>{w.name}</span>
-                          <span className="text-xs text-muted-foreground font-mono">
-                            ({w.role})
-                          </span>
-                        </div>
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            )}
-            {errors.workerId && (
-              <p className="text-xs text-destructive">{errors.workerId.message}</p>
+            <div className="relative">
+              <User className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                id="workerName"
+                list="worker-suggestions"
+                placeholder="Type the name of who receives it"
+                className="h-10 pl-9"
+                autoComplete="off"
+                {...register("workerName")}
+              />
+              <datalist id="worker-suggestions">
+                {activeWorkers.map((w) => (
+                  <option key={w.id} value={w.name} />
+                ))}
+              </datalist>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Pick a registered worker from the suggestions or type any name.
+            </p>
+            {errors.workerName && (
+              <p className="text-xs text-destructive">{errors.workerName.message}</p>
             )}
           </div>
 
@@ -301,34 +311,92 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="quantity" className="font-medium">
-                      Quantity
+                      Quantity <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="quantity"
                       type="number"
-                      disabled={requiresInstallation}
+                      min={1}
+                      max={selectedItem?.quantity || 9999}
                       {...register("quantity", { valueAsNumber: true })}
-                      className="h-10 bg-muted/50"
+                      className="h-10"
                     />
-                    <p className="text-[10px] text-muted-foreground">
-                      Tyres and Rims are issued as 1 per installation record.
-                    </p>
+                    {selectedItem && (
+                      <p className="text-[10px] text-muted-foreground">
+                        Available stock: {selectedItem.quantity} {selectedItem.unit}
+                      </p>
+                    )}
+                    {errors.quantity && (
+                      <p className="text-xs text-destructive">
+                        {errors.quantity.message}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-1.5">
-                    <Label htmlFor="vehicleNumber" className="font-medium">
-                      Vehicle Number <span className="text-destructive">*</span>
-                    </Label>
-                    <Input
-                      id="vehicleNumber"
-                      placeholder="e.g. RJ31GA9265"
-                      className="h-10 font-mono uppercase tracking-wider"
-                      {...register("vehicleNumber")}
-                    />
-                    {errors.vehicleNumber && (
-                      <p className="text-xs text-destructive">
-                        {errors.vehicleNumber.message}
-                      </p>
+                    <div className="flex items-center gap-1 rounded-lg bg-muted/60 p-0.5 w-fit">
+                      <button
+                        type="button"
+                        onClick={() => setInstallTarget("vehicle")}
+                        className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                          installTarget === "vehicle"
+                            ? "bg-background text-foreground shadow-sm"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        Vehicle No.
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setInstallTarget("chassis")}
+                        className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                          installTarget === "chassis"
+                            ? "bg-background text-foreground shadow-sm"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        Trailer Chassis
+                      </button>
+                    </div>
+                    {installTarget === "vehicle" ? (
+                      <>
+                        <Input
+                          id="vehicleNumber"
+                          placeholder="e.g. RJ31GA9265"
+                          className="h-10 font-mono uppercase tracking-wider"
+                          {...register("vehicleNumber")}
+                        />
+                        {errors.vehicleNumber && (
+                          <p className="text-xs text-destructive">
+                            {errors.vehicleNumber.message}
+                          </p>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <Input
+                          id="chassisNumber"
+                          list="chassis-suggestions"
+                          placeholder="e.g. CH-00001"
+                          className="h-10 font-mono uppercase tracking-wider"
+                          autoComplete="off"
+                          {...register("chassisNumber")}
+                        />
+                        <datalist id="chassis-suggestions">
+                          {workshopTrailers?.map((t) => (
+                            <option key={t.id} value={t.chassisNumber}>
+                              {t.model
+                                ? `${t.model} — ${t.currentStageName}`
+                                : t.currentStageName}
+                            </option>
+                          ))}
+                        </datalist>
+                        {errors.chassisNumber && (
+                          <p className="text-xs text-destructive">
+                            {errors.chassisNumber.message}
+                          </p>
+                        )}
+                      </>
                     )}
                   </div>
                 </div>
@@ -445,21 +513,6 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
                   )}
                 </div>
               </>
-            )}
-
-            {/* Serial Number if present/required */}
-            {!selectedItem?.serialNumber && requiresInstallation && (
-              <div className="space-y-1.5">
-                <Label htmlFor="serialNumber" className="font-medium">
-                  Serial Number
-                </Label>
-                <Input
-                  id="serialNumber"
-                  placeholder="Enter serial number for tracking"
-                  className="h-10"
-                  {...register("serialNumber")}
-                />
-              </div>
             )}
 
             {/* Notes / Purpose */}

@@ -75,15 +75,18 @@ export function IssuesTable() {
       },
       {
         accessorKey: "vehicleNumber",
-        header: "Vehicle No.",
-        cell: ({ row }) =>
-          row.original.vehicleNumber ? (
+        header: "Vehicle / Chassis",
+        cell: ({ row }) => {
+          const target =
+            row.original.vehicleNumber || row.original.chassisNumber;
+          return target ? (
             <span className="font-semibold text-foreground tracking-wide font-mono bg-muted/60 px-2 py-0.5 rounded text-xs border border-border">
-              {row.original.vehicleNumber}
+              {target}
             </span>
           ) : (
             <span className="text-xs text-muted-foreground">—</span>
-          ),
+          );
+        },
       },
       {
         accessorKey: "quantity",
