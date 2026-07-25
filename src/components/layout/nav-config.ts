@@ -3,6 +3,8 @@ import {
   Package,
   ClipboardList,
   Factory,
+  Wrench,
+  FileOutput,
   Users,
   FileBarChart,
   Tags,
@@ -23,10 +25,32 @@ export interface NavItem {
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Inventory", href: "/inventory", icon: Package },
-  { label: "Issues", href: "/issues", icon: ClipboardList },
+  {
+    label: "Dashboard",
+    href: "/dashboard",
+    icon: LayoutDashboard,
+    roles: ["admin", "worker"],
+  },
+  {
+    label: "Inventory",
+    href: "/inventory",
+    icon: Package,
+    roles: ["admin", "worker"],
+  },
+  {
+    label: "Issues",
+    href: "/issues",
+    icon: ClipboardList,
+    roles: ["admin", "worker"],
+  },
+  {
+    label: "Gate Pass",
+    href: "/gate-pass",
+    icon: FileOutput,
+    roles: ["admin", "worker"],
+  },
   { label: "Workshop", href: "/workshop", icon: Factory },
+  { label: "Repairs", href: "/workshop/repairs", icon: Wrench },
   { label: "Categories", href: "/categories", icon: Tags, roles: ["admin"] },
   { label: "Workers", href: "/workers", icon: Users, roles: ["admin"] },
   { label: "Reports", href: "/reports", icon: FileBarChart, roles: ["admin"] },

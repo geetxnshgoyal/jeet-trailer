@@ -14,6 +14,7 @@ import type {
   TrailerStage,
   TrailerHistoryEvent,
   TrailerStatus,
+  Role,
 } from "@/lib/domain/types";
 
 /**
@@ -41,7 +42,7 @@ function trailersCol() {
 interface Actor {
   id: string;
   name: string;
-  role: "admin" | "worker";
+  role: Role;
 }
 
 export interface CreateTrailerData {

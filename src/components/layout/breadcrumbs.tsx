@@ -11,6 +11,8 @@ const SEGMENT_LABELS: Record<string, string> = {
   inventory: "Inventory",
   issues: "Issues",
   workshop: "Workshop",
+  repairs: "Repairs",
+  "gate-pass": "Gate Pass",
   installations: "Installations",
   workers: "Workers",
   categories: "Categories",

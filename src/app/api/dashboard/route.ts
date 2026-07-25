@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireUser } from "@/lib/auth/session";
+import { requireInventoryAccess } from "@/lib/auth/session";
 import { ok, handler } from "@/lib/api/response";
 import { getDashboardStats } from "@/lib/data/stats";
 
@@ -8,7 +8,7 @@ import { getDashboardStats } from "@/lib/data/stats";
  * Accessible to any authenticated user.
  */
 export const GET = handler(async () => {
-  await requireUser();
+  await requireInventoryAccess();
   const stats = await getDashboardStats();
   return ok({ stats });
 });

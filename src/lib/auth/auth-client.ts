@@ -5,6 +5,7 @@ import {
   signOut as fbSignOut,
 } from "firebase/auth";
 import { getFirebaseAuth } from "@/lib/firebase/client";
+import type { Role } from "@/lib/domain/types";
 
 /**
  * Client-side auth helpers. These wrap the Firebase Web SDK and keep the
@@ -19,7 +20,7 @@ export interface SignedInUser {
   id: string;
   email: string;
   name: string;
-  role: "admin" | "worker";
+  role: Role;
 }
 
 /** Map Firebase Auth error codes to friendly, non-leaky messages. */

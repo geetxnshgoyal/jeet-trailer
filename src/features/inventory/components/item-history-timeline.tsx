@@ -6,6 +6,7 @@ import {
   ArrowDown,
   PackageCheck,
   Wrench,
+  FileOutput,
   Pencil,
   type LucideIcon,
 } from "lucide-react";
@@ -28,6 +29,11 @@ const EVENT_META: Record<
   stock_reduced: { icon: ArrowDown, label: "Stock reduced", tone: "text-warning" },
   issued: { icon: PackageCheck, label: "Issued", tone: "text-primary" },
   installed: { icon: Wrench, label: "Installed", tone: "text-success" },
+  gate_pass: {
+    icon: FileOutput,
+    label: "Released on gate pass",
+    tone: "text-warning",
+  },
   edited: { icon: Pencil, label: "Details edited", tone: "text-muted-foreground" },
 };
 

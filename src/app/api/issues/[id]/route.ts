@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireUser } from "@/lib/auth/session";
+import { requireInventoryAccess } from "@/lib/auth/session";
 import { ok, handler, DomainError } from "@/lib/api/response";
 import { getIssue } from "@/lib/data/issues";
 
@@ -9,7 +9,7 @@ import { getIssue } from "@/lib/data/issues";
  */
 export const GET = handler(
   async (req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
-    await requireUser();
+    await requireInventoryAccess();
     const { id } = await ctx.params;
     const issue = await getIssue(id);
     if (!issue) {

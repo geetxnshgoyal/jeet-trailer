@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireRole, requireUser } from "@/lib/auth/session";
+import { requireRole, requireInventoryAccess } from "@/lib/auth/session";
 import { ok, handler, DomainError } from "@/lib/api/response";
 import { createItemSchema } from "@/lib/domain/schemas";
 import { listItems, createItem } from "@/lib/data/inventory";
@@ -11,7 +11,7 @@ import type { InventoryItem } from "@/lib/domain/types";
  * filters. Any authenticated user (admin or worker) may read inventory.
  */
 export const GET = handler(async (req: NextRequest) => {
-  await requireUser();
+  await requireInventoryAccess();
   const { searchParams } = new URL(req.url);
   const items = await listItems({
     categoryId: searchParams.get("category") ?? undefined,

@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireUser } from "@/lib/auth/session";
+import { requireInventoryAccess } from "@/lib/auth/session";
 import { ok, handler } from "@/lib/api/response";
 import { createIssueSchema } from "@/lib/domain/schemas";
 import { createIssue, listIssues } from "@/lib/data/issues";
@@ -11,7 +11,7 @@ import type { IssueRecord, AppUser } from "@/lib/domain/types";
  * GET /api/issues: list issue records (any authenticated user).
  */
 export const GET = handler(async (req: NextRequest) => {
-  await requireUser();
+  await requireInventoryAccess();
   const params = req.nextUrl.searchParams;
 
   const issues = await listIssues({
@@ -32,7 +32,7 @@ export const GET = handler(async (req: NextRequest) => {
  * Stock decrement + issue record + history are written in a single transaction.
  */
 export const POST = handler(async (req: NextRequest) => {
-  const user = await requireUser();
+  const user = await requireInventoryAccess();
   const input = createIssueSchema.parse(await req.json());
 
   // Resolve the recipient: a workerId links a portal account; otherwise a

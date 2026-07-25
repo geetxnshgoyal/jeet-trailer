@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireUser } from "@/lib/auth/session";
+import { requireInventoryAccess } from "@/lib/auth/session";
 import { ok, handler } from "@/lib/api/response";
 import { getItemHistory } from "@/lib/data/inventory";
 
@@ -10,7 +10,7 @@ import { getItemHistory } from "@/lib/data/inventory";
  */
 export const GET = handler(
   async (_req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
-    await requireUser();
+    await requireInventoryAccess();
     const { id } = await ctx.params;
     const history = await getItemHistory(id);
     return ok({ history });

@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { cache } from "react";
 import { adminAuth, adminDb } from "@/lib/firebase/admin";
 import { serverEnv } from "@/lib/env";
-import { COLLECTIONS } from "@/lib/domain/constants";
+import { COLLECTIONS, canAccessInventory } from "@/lib/domain/constants";
 import type { AppUser, Role } from "@/lib/domain/types";
 
 /**
@@ -91,6 +91,19 @@ export async function requireRole(role: Role): Promise<SessionUser> {
   const user = await requireUser();
   if (role === "admin" && user.role !== "admin") {
     throw new AuthError("FORBIDDEN", "Admin access required");
+  }
+  return user;
+}
+
+/**
+ * Require a user who may see stock. Workshop staff are restricted to the
+ * production line and repairs, so hiding the nav is not enough: the API has
+ * to refuse them too, or the data is a URL away.
+ */
+export async function requireInventoryAccess(): Promise<SessionUser> {
+  const user = await requireUser();
+  if (!canAccessInventory(user.role)) {
+    throw new AuthError("FORBIDDEN", "Not available for workshop accounts");
   }
   return user;
 }

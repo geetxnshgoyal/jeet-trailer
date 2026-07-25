@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { UNITS, USER_ROLES } from "./constants";
+import { UNITS, USER_ROLES, PAYMENT_METHODS } from "./constants";
 
 /**
  * Zod schemas are the single source of truth for the shape of data crossing
@@ -150,6 +150,90 @@ export const assignStageWorkerSchema = z.object({
   workerId: z.string().trim().max(64),
 });
 export type AssignStageWorkerInput = z.infer<typeof assignStageWorkerSchema>;
+
+// ── Gate pass ────────────────────────────────────────────────────────────────
+
+/**
+ * A gate pass records goods leaving the yard. Only the voucher number and
+ * party are mandatory; tyres and rims are each optional, but a quantity is
+ * meaningless without knowing which stock it came from, so entering one
+ * requires the other.
+ */
+export const createGatePassSchema = z
+  .object({
+    voucherNumber: trimmed(1, 40, "Voucher number"),
+    partyName: trimmed(2, 120, "Party name"),
+    trailerChassisNumber: z.string().trim().max(32).optional().or(z.literal("")),
+    trailerSize: z.string().trim().max(40).optional().or(z.literal("")),
+    /** Inventory item id the tyres are drawn from. */
+    tyreItemId: z.string().trim().max(64).optional().or(z.literal("")),
+    tyreQuantity: z.coerce.number().int().min(0).optional(),
+    rimItemId: z.string().trim().max(64).optional().or(z.literal("")),
+    rimQuantity: z.coerce.number().int().min(0).optional(),
+    color: z.string().trim().max(40).optional().or(z.literal("")),
+    paymentMethod: z.enum(PAYMENT_METHODS).optional().or(z.literal("")),
+    notes: z.string().trim().max(500).optional().or(z.literal("")),
+  })
+  .superRefine((val, ctx) => {
+    if (val.tyreQuantity && val.tyreQuantity > 0 && !val.tyreItemId) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["tyreItemId"],
+        message: "Select a tyre brand for the quantity entered",
+      });
+    }
+    if (val.rimQuantity && val.rimQuantity > 0 && !val.rimItemId) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["rimItemId"],
+        message: "Select a rim brand for the quantity entered",
+      });
+    }
+    if (val.tyreItemId && !val.tyreQuantity) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["tyreQuantity"],
+        message: "Enter how many tyres are going out",
+      });
+    }
+    if (val.rimItemId && !val.rimQuantity) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["rimQuantity"],
+        message: "Enter how many rims are going out",
+      });
+    }
+  });
+export type CreateGatePassInput = z.infer<typeof createGatePassSchema>;
+
+// ── Workshop repairs ─────────────────────────────────────────────────────────
+
+/**
+ * A repair log. Everything is optional so the floor can record a job quickly,
+ * but a completely blank entry is worthless, so at least one detail is required.
+ */
+export const createRepairSchema = z
+  .object({
+    vehicleNumber: z.string().trim().max(16).optional().or(z.literal("")),
+    chassisNumber: z.string().trim().max(32).optional().or(z.literal("")),
+    partyName: z.string().trim().max(120).optional().or(z.literal("")),
+    description: z.string().trim().max(1000).optional().or(z.literal("")),
+    cost: z.coerce.number().min(0).optional(),
+  })
+  .superRefine((val, ctx) => {
+    const hasAny =
+      val.vehicleNumber?.trim() ||
+      val.chassisNumber?.trim() ||
+      val.description?.trim();
+    if (!hasAny) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["vehicleNumber"],
+        message: "Add a vehicle number, chassis number or description",
+      });
+    }
+  });
+export type CreateRepairInput = z.infer<typeof createRepairSchema>;
 
 // ── Issue & installation ───────────────────────────────────────────────────────
 

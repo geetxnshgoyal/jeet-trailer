@@ -1,20 +1,17 @@
 import { NextRequest } from "next/server";
-import { adminDb } from "@/lib/firebase/admin";
-import { requireInventoryAccess } from "@/lib/auth/session";
+import { requireUser } from "@/lib/auth/session";
 import { ok, handler, DomainError } from "@/lib/api/response";
 import { getStorage } from "@/lib/storage";
-import { COLLECTIONS } from "@/lib/domain/constants";
-import type { IssueRecord, InstallationPhoto } from "@/lib/domain/types";
+import { getRepair, addRepairPhotos } from "@/lib/data/repairs";
+import type { InstallationPhoto } from "@/lib/domain/types";
 
 /**
- * POST /api/issues/[id]/photos: upload one or more installation photos for an
- * issue. Multipart form data with one or more `files` parts.
+ * POST /api/workshop/repairs/[id]/photos: upload repair photos.
+ * Multipart form data with one or more `files` parts.
  *
- * Photos are uploaded through the storage abstraction (Firebase Storage today,
- * swappable later) and returned as {@link InstallationPhoto} refs. This endpoint
- * only stores the files and returns their URLs; marking the issue installed and
- * persisting the photo refs happens in the install route so the two stay in one
- * auditable transaction.
+ * Files go through the storage abstraction rather than into the document, so
+ * a repair can carry many photos without running into Firestore's 1 MB
+ * per-document limit. The refs are attached to the repair on success.
  */
 
 const MAX_FILES = 10;
@@ -23,17 +20,13 @@ const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/heic"])
 
 export const POST = handler(
   async (req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
-    await requireInventoryAccess();
+    await requireUser();
     const { id } = await ctx.params;
 
-    // Confirm the issue exists before spending time on uploads.
-    const snap = await adminDb().collection(COLLECTIONS.issues).doc(id).get();
-    if (!snap.exists) {
-      throw new DomainError("NOT_FOUND", "Issue record not found", 404);
+    const repair = await getRepair(id);
+    if (!repair) {
+      throw new DomainError("NOT_FOUND", "Repair not found", 404);
     }
-    const issue = snap.data() as IssueRecord;
-
-
 
     const form = await req.formData();
     const files = form.getAll("files").filter((f): f is File => f instanceof File);
@@ -67,7 +60,7 @@ export const POST = handler(
       }
       const buffer = Buffer.from(await file.arrayBuffer());
       const stored = await storage.upload({
-        path: `installations/${issue.code}`,
+        path: `repairs/${repair.code}`,
         fileName: file.name || "photo.jpg",
         contentType: file.type,
         data: buffer,
@@ -79,6 +72,7 @@ export const POST = handler(
       });
     }
 
-    return ok({ photos: uploaded }, 201);
+    const updated = await addRepairPhotos(id, uploaded);
+    return ok({ repair: updated, photos: uploaded }, 201);
   },
 );

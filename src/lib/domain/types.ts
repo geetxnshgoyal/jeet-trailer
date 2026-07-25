@@ -8,7 +8,7 @@
  */
 
 /** User roles. Stored both as a Firebase Auth custom claim and on the users doc. */
-export type Role = "admin" | "worker";
+export type Role = "admin" | "worker" | "workshop";
 
 export interface AppUser {
   /** Firebase Auth UID. */
@@ -75,6 +75,7 @@ export type ItemHistoryEventType =
   | "stock_reduced"
   | "issued"
   | "installed"
+  | "gate_pass"
   | "edited";
 
 export interface ItemHistoryEvent {
@@ -86,6 +87,8 @@ export interface ItemHistoryEvent {
   resultingQuantity?: number;
   /** Linked issue, for issued/installed events. */
   issueId?: string;
+  /** Linked gate pass, for gate_pass events. */
+  gatePassId?: string;
   vehicleNumber?: string;
   /** Supplier/party the stock came from (or went to), for stock adjustments. */
   partyName?: string;
@@ -166,6 +169,65 @@ export interface TrailerHistoryEvent {
   actorName: string;
   note?: string;
   createdAt: string;
+}
+
+// ── Gate pass ────────────────────────────────────────────────────────────────
+
+/** A tyre or rim line on a gate pass, resolved against a real inventory item. */
+export interface GatePassLine {
+  /** Inventory item the stock was drawn from. */
+  itemId: string;
+  /** Denormalized label shown on the pass, e.g. "MRF, 295/80 R22.5". */
+  label: string;
+  itemCode: string;
+  quantity: number;
+}
+
+/**
+ * A gate pass: goods leaving the premises against a voucher.
+ *
+ * Issuing a pass deducts the tyre and rim quantities from inventory in the
+ * same transaction that writes this record, so stock can never drift from
+ * what has physically left the gate.
+ */
+export interface GatePassRecord {
+  id: string;
+  /** Voucher number written on the physical pass. Unique. */
+  voucherNumber: string;
+  partyName: string;
+  trailerChassisNumber?: string;
+  trailerSize?: string;
+  tyre?: GatePassLine;
+  rim?: GatePassLine;
+  color?: string;
+  paymentMethod?: string;
+  notes?: string;
+  createdById: string;
+  createdByName: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ── Workshop repairs ─────────────────────────────────────────────────────────
+
+/**
+ * A repair job logged from the workshop floor. Intentionally loose: fields are
+ * optional so a worker can record a job in seconds, with photos as the proof.
+ */
+export interface RepairRecord {
+  id: string;
+  /** Human-facing code, e.g. REP-00042. */
+  code: string;
+  vehicleNumber?: string;
+  chassisNumber?: string;
+  partyName?: string;
+  description?: string;
+  cost?: number;
+  photos: InstallationPhoto[];
+  workerId: string;
+  workerName: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export type InstallationStatus = "issued" | "installed" | "cancelled";

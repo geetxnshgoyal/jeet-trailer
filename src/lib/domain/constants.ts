@@ -30,8 +30,24 @@ export const DEFAULT_LOW_STOCK_THRESHOLD = 5;
 
 export const UNITS = ["pcs", "packet", "roll", "box", "meter", "kg", "set"] as const;
 
-/** System roles. Admin has full access; workers issue/install only. */
-export const USER_ROLES = ["admin", "worker"] as const;
+/**
+ * System roles.
+ *  - admin: full access.
+ *  - worker: inventory, issues and installations.
+ *  - workshop: the production line and repairs only, no inventory or issues.
+ */
+export const USER_ROLES = ["admin", "worker", "workshop"] as const;
+
+export const ROLE_LABELS: Record<(typeof USER_ROLES)[number], string> = {
+  admin: "Admin",
+  worker: "Worker",
+  workshop: "Workshop Worker",
+};
+
+/** Roles allowed to read or move stock. Workshop staff are deliberately out. */
+export function canAccessInventory(role: string): boolean {
+  return role === "admin" || role === "worker";
+}
 
 /**
  * Categories that never carry serial numbers, whatever their stored flag says.
@@ -80,8 +96,29 @@ export const COLLECTIONS = {
   inventory: "inventory",
   issues: "issues",
   trailers: "trailers",
+  gatePasses: "gatePasses",
+  repairs: "repairs",
   counters: "counters",
 } as const;
+
+/** Counter prefix for repair codes, e.g. REP-00001. */
+export const REPAIR_CODE_PREFIX = "REP";
+
+/** Payment methods offered on a gate pass. */
+export const PAYMENT_METHODS = [
+  "Cash",
+  "UPI",
+  "Bank Transfer",
+  "Cheque",
+  "Credit",
+] as const;
+
+/**
+ * Categories a gate pass can draw stock from. Matched case-insensitively
+ * against the item's denormalized category name, singular or plural.
+ */
+export const GATE_PASS_TYRE_CATEGORIES = ["tyre", "tyres"];
+export const GATE_PASS_RIM_CATEGORIES = ["rim", "rims"];
 
 /** Subcollection name under each inventory item. */
 export const ITEM_HISTORY_SUBCOLLECTION = "history";
