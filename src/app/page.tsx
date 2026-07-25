@@ -1,10 +1,15 @@
 import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth/session";
+import { landingPath } from "@/lib/domain/permissions";
+
+export const dynamic = "force-dynamic";
 
 /**
- * Root entry. Authenticated users are routed to the dashboard by middleware;
- * unauthenticated users land on the login page. This redirect covers the
- * bare "/" hit before middleware-based routing takes over in phase 2.
+ * Root entry. Sends each visitor straight to somewhere they can actually use:
+ * only admins have a dashboard, so a fixed redirect there would bounce every
+ * other role through a page they are not allowed to see.
  */
-export default function RootPage() {
-  redirect("/dashboard");
+export default async function RootPage() {
+  const user = await getCurrentUser();
+  redirect(user ? landingPath(user.role) : "/login");
 }

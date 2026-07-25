@@ -109,11 +109,17 @@ export function useUploadPhotos(id: string) {
   });
 }
 
-export function useWorkersList() {
+/**
+ * The worker roster. Only admins may read /api/workers, so callers pass
+ * `enabled: false` for other roles rather than firing a request that is
+ * certain to come back 403.
+ */
+export function useWorkersList(enabled = true) {
   return useQuery({
     queryKey: ["workers"],
     queryFn: () => api.get<{ workers: AppUser[] }>("/api/workers"),
     select: (d) => d.workers,
+    enabled,
   });
 }
 

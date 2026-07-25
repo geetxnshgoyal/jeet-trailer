@@ -30,13 +30,20 @@ import {
 } from "@/components/ui/select";
 import { Loader2, X, Camera, User } from "lucide-react";
 import type { InstallationPhoto } from "@/lib/domain/types";
+import { compressImage } from "@/lib/utils/image";
 
 interface PhotoItem {
   id: string;
   file?: File;
-  url: string; // Base64 or object URL
+  url: string; // Base64 data URL, stored on the issue document
+  /** Encoded size, used to keep the set inside the document limit. */
+  bytes: number;
   name: string;
 }
+
+/** Firestore allows 1 MB per document; leave room for the record itself. */
+const PHOTO_BUDGET_BYTES = 700_000;
+const MAX_PHOTOS = 6;
 
 export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode }>) {
   const [open, setOpen] = useState(false);
@@ -91,31 +98,57 @@ export function IssueFormDialog({ trigger }: Readonly<{ trigger: React.ReactNode
   // defaulting to the signed-in admin only invited mis-recorded issues.
 
 
-  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files) return;
-    const selectedFiles = Array.from(e.target.files);
+  /**
+   * Installation photos ride along on the issue document, so the whole set has
+   * to fit inside Firestore's 1 MB limit once base64 inflates it. Each photo is
+   * downscaled and the running total is capped: the old 8 MB per-file limit
+   * accepted photos that could never be saved.
+   */
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files ?? []);
+    e.target.value = "";
+    if (selectedFiles.length === 0) return;
     setPhotoError(null);
 
-    selectedFiles.forEach((file) => {
-      if (file.size > 8 * 1024 * 1024) {
-        toast.error(`${file.name} exceeds 8MB limit`);
-        return;
+    for (const file of selectedFiles) {
+      let compressed;
+      try {
+        compressed = await compressImage(file);
+      } catch {
+        toast.error(`Could not read ${file.name}.`);
+        continue;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setPhotos((prev) => [
+
+      let stop = false;
+      setPhotos((prev) => {
+        if (prev.length >= MAX_PHOTOS) {
+          stop = true;
+          return prev;
+        }
+        const used = prev.reduce((sum, p) => sum + p.bytes, 0);
+        if (used + compressed.bytes > PHOTO_BUDGET_BYTES) {
+          stop = true;
+          return prev;
+        }
+        return [
           ...prev,
           {
             id: `${Date.now()}-${Math.random()}`,
             file,
-            url: reader.result as string,
+            url: compressed.dataUrl,
+            bytes: compressed.bytes,
             name: file.name,
           },
-        ]);
-      };
-      reader.readAsDataURL(file);
-    });
-    e.target.value = "";
+        ];
+      });
+
+      if (stop) {
+        setPhotoError(
+          "Photo limit reached. Remove one to add another, or save and add the rest to the installation record.",
+        );
+        break;
+      }
+    }
   };
 
   const removePhoto = (id: string) => {

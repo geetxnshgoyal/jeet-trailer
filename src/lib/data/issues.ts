@@ -261,7 +261,13 @@ export async function listIssues(
 ): Promise<IssueRecord[]> {
   const q = issuesCol().orderBy("issuedAt", "desc");
   const snap = await q.get();
-  let issues = snap.docs.map((d) => d.data() as IssueRecord);
+  // Installation photos are stored inline as base64 and are not rendered in
+  // any list view, so shipping them would bloat every response by megabytes
+  // for nothing. The detail endpoint returns the full record.
+  let issues = snap.docs.map((d) => {
+    const issue = d.data() as IssueRecord;
+    return { ...issue, photos: [] } as IssueRecord;
+  });
 
   if (filter.workerId) {
     issues = issues.filter((it) => it.workerId === filter.workerId);

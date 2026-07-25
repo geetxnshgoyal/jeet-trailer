@@ -23,9 +23,11 @@ export function proxy(req: NextRequest) {
     (p) => pathname === p || pathname.startsWith(`${p}/`),
   );
 
-  // Signed-in user hitting the login page → send to dashboard.
+  // Signed-in user hitting the login page → send to the root, which resolves
+  // the session and forwards to whichever area the role can use. The edge
+  // cannot verify the cookie, so it cannot know the role itself.
   if (hasSession && isPublic) {
-    return NextResponse.redirect(new URL("/dashboard", req.url));
+    return NextResponse.redirect(new URL("/", req.url));
   }
 
   // Unauthenticated user hitting a protected page → send to login with a
