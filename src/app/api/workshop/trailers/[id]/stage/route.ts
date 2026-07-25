@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireUser } from "@/lib/auth/session";
+import { requireArea } from "@/lib/auth/session";
 import { ok, handler } from "@/lib/api/response";
 import { trailerStageActionSchema } from "@/lib/domain/schemas";
 import { startStage, completeStage } from "@/lib/data/trailers";
@@ -16,7 +16,7 @@ import { startStage, completeStage } from "@/lib/data/trailers";
  */
 export const POST = handler(
   async (req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
-    const user = await requireUser();
+    const user = await requireArea("workshop");
     const { id } = await ctx.params;
     const input = trailerStageActionSchema.parse(await req.json());
 

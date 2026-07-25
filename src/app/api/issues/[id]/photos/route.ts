@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { adminDb } from "@/lib/firebase/admin";
-import { requireInventoryAccess } from "@/lib/auth/session";
+import { requireArea } from "@/lib/auth/session";
 import { ok, handler, DomainError } from "@/lib/api/response";
 import { getStorage } from "@/lib/storage";
 import { COLLECTIONS } from "@/lib/domain/constants";
@@ -23,7 +23,7 @@ const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/heic"])
 
 export const POST = handler(
   async (req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
-    await requireInventoryAccess();
+    await requireArea("issues");
     const { id } = await ctx.params;
 
     // Confirm the issue exists before spending time on uploads.

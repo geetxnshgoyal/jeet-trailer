@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { LoginForm } from "@/features/auth/components/login-form";
 import { BUSINESS, addressLine, gstinLine } from "@/lib/domain/business";
+import { landingPath } from "@/lib/domain/permissions";
 import { Truck } from "lucide-react";
 
 /**
@@ -17,7 +18,7 @@ export default async function LoginPage({
   // would swallow it and render an error page instead of sending a signed-in
   // user to the dashboard. getCurrentUser already returns null on failure.
   const user = await getCurrentUser();
-  if (user) redirect("/dashboard");
+  if (user) redirect(landingPath(user.role));
 
   const { next } = await searchParams;
 

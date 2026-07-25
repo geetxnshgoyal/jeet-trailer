@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireUser } from "@/lib/auth/session";
+import { requireArea } from "@/lib/auth/session";
 import { ok, handler, DomainError } from "@/lib/api/response";
 import { getStorage } from "@/lib/storage";
 import { getRepair, addRepairPhotos } from "@/lib/data/repairs";
@@ -20,7 +20,7 @@ const ALLOWED = new Set(["image/jpeg", "image/png", "image/webp", "image/heic"])
 
 export const POST = handler(
   async (req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
-    await requireUser();
+    await requireArea("repairs");
     const { id } = await ctx.params;
 
     const repair = await getRepair(id);

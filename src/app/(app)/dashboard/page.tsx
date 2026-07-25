@@ -1,5 +1,5 @@
 import { requireUser } from "@/lib/auth/session";
-import { canAccessInventory } from "@/lib/domain/constants";
+import { canAccess, landingPath } from "@/lib/domain/permissions";
 import { redirect } from "next/navigation";
 import { DashboardPage } from "@/features/dashboard/components/dashboard-page";
 
@@ -9,8 +9,7 @@ import { DashboardPage } from "@/features/dashboard/components/dashboard-page";
  */
 export default async function DashboardRoute() {
   const user = await requireUser();
-  // Workshop accounts have no stock access; send them to their own area.
-  if (!canAccessInventory(user.role)) redirect("/workshop");
+  if (!canAccess(user.role, "dashboard")) redirect(landingPath(user.role));
   return <DashboardPage userName={userNameForDisplay(user.name)} />;
 }
 

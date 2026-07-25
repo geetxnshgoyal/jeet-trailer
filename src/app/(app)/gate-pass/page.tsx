@@ -1,14 +1,14 @@
-import { redirect } from "next/navigation";
 import { GatePassesTable } from "@/features/gate-pass/components/gate-passes-table";
 import { requireUser } from "@/lib/auth/session";
-import { canAccessInventory } from "@/lib/domain/constants";
+import { canAccess, landingPath } from "@/lib/domain/permissions";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 /** Gate pass route. Stock-facing, so workshop accounts are sent away. */
 export default async function GatePassPage() {
   const user = await requireUser();
-  if (!canAccessInventory(user.role)) redirect("/workshop");
+  if (!canAccess(user.role, "gatePass")) redirect(landingPath(user.role));
 
   return (
     <div className="space-y-4">

@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireRole } from "@/lib/auth/session";
+import { requireRole, requireArea } from "@/lib/auth/session";
 import { ok, handler, DomainError } from "@/lib/api/response";
 import { assignStageWorkerSchema } from "@/lib/domain/schemas";
 import { assignStageWorker } from "@/lib/data/trailers";

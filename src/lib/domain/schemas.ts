@@ -38,7 +38,7 @@ export const createWorkerSchema = z.object({
   email: z.string().trim().email("Enter a valid email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   phone: z.string().trim().max(20).optional().or(z.literal("")),
-  role: z.enum(USER_ROLES).default("worker"),
+  role: z.enum(USER_ROLES).default("store"),
 });
 export type CreateWorkerInput = z.infer<typeof createWorkerSchema>;
 

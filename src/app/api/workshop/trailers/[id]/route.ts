@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { requireUser } from "@/lib/auth/session";
+import { requireArea } from "@/lib/auth/session";
 import { ok, handler, DomainError } from "@/lib/api/response";
 import { getTrailer, listTrailerHistory } from "@/lib/data/trailers";
 
@@ -9,7 +9,7 @@ import { getTrailer, listTrailerHistory } from "@/lib/data/trailers";
  */
 export const GET = handler(
   async (_req: NextRequest, ctx: { params: Promise<{ id: string }> }) => {
-    await requireUser();
+    await requireArea("workshop");
     const { id } = await ctx.params;
 
     const trailer = await getTrailer(id);

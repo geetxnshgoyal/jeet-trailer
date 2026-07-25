@@ -1,5 +1,7 @@
 import { WorkshopBoard } from "@/features/workshop/components/workshop-board";
 import { requireUser } from "@/lib/auth/session";
+import { canAccess, landingPath } from "@/lib/domain/permissions";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -7,7 +9,8 @@ export const dynamic = "force-dynamic";
  * Workshop production-line route.
  */
 export default async function WorkshopPage() {
-  await requireUser();
+  const user = await requireUser();
+  if (!canAccess(user.role, "workshop")) redirect(landingPath(user.role));
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-1">
